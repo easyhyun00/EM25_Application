@@ -8,6 +8,8 @@ import PlantLive from "../screens/PlantLive";
 import PlantTimeLine from "../screens/PlantTimeLine";
 import PlantSeach from "../screens/PlantSearch";
 import Developer from "../screens/Developer";
+import OpenApi from "../screens/OpenApi";
+import Login from "../screens/LoginPage";
 
 const Stack = createNativeStackNavigator()
 
@@ -16,11 +18,13 @@ const Navigation = ()=>{
         <NavigationContainer>
             <Stack.Navigator screenOptions={{headerBackTitleVisible: false}}>
                 <Stack.Screen name="메인 홈" component={Home}></Stack.Screen>
+                <Stack.Screen name="Login" component={Login} options={{headerShown: false}}></Stack.Screen>
                 <Stack.Screen name="식물 정보 보기" component={PlantInfo}></Stack.Screen>
                 <Stack.Screen name="식물 실시간 보기" component={PlantLive}></Stack.Screen>
                 <Stack.Screen name="식물 타임라인 보기" component={PlantTimeLine}></Stack.Screen>
                 <Stack.Screen name="다른 식물 알아 보기" component={PlantSeach}></Stack.Screen>
                 <Stack.Screen name="팀원 정보 보기" component={Developer}></Stack.Screen>
+                <Stack.Screen name="OpenApi" component={OpenApi}></Stack.Screen>
             </Stack.Navigator>
         </NavigationContainer>
     )
