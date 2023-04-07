@@ -1,25 +1,55 @@
-import { React, useState } from 'react'
-import { Button, SearchBar } from '@rneui/base';
-import { View, Text, StyleSheet, Image, Modal } from 'react-native'
-
-/*
-    식물 정보를 등록했으면 plantInfo 1, 등록 안했으면 0
-    plantInfo가 1, 0인지에 따라 정보 보여주기
-
-    온도습도광 정보는 센서로 측정해서 DB로 값 보내서, DB에서 가져온 값
-*/
+import { React, useState, useEffect } from 'react'
+import { Button } from '@rneui/base';
+import { SearchBar } from '@rneui/themed';
+import { View, Text, StyleSheet, Image, Modal, FlatList } from 'react-native'
+import { onAuthStateChanged } from 'firebase/auth';
+import { FIREBASE_AUTH, FIREBASE_DB } from '../firebaseConfig';
+import { doc, getDoc, updateDoc, collection, getDocs, query  } from 'firebase/firestore';
 
 export default function PlantInfo() {
 
-    const [ plantInfo, setPlantInfo] = useState(0);
+    const [userUid, setUserUid] = useState('');
+    const [plantInfo, setPlantInfo] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [modalVisible2, setModalVisible2] = useState(false);
+
+    // 데이터베이스 읽기
+    useEffect(() => {
+        onAuthStateChanged(FIREBASE_AUTH, (user) => {
+          if(user) {
+            console.log(user.uid);
+            setUserUid(user.uid);
+            getData(user.uid);
+          }
+        })
+    }, []);
+
+    // 사용자 정보 가져오기
+    const getData = async (uid) => { // 데이터 읽기
+        const docRef = doc(FIREBASE_DB, "Users", uid)
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            console.log("Document data:", docSnap.data());
+            console.log(docSnap.data().plantRegistration);
+            console.log(docSnap.data().plantNo);
+            setPlantInfo(docSnap.data().plantRegistration);
+        }
+    }
+
+    const updateData = async (boolean) => {
+        setPlantInfo(boolean);
+        const washingtonRef = doc(FIREBASE_DB, "Users", userUid);
+        await updateDoc(washingtonRef, {
+            plantRegistration: boolean
+        });
+    }
 
     const ModalInfo = (
         <View>
             <Button
                 title="닫기"
-                onPress={() => {plantInfo == 0 ? setModalVisible2(!modalVisible2) : setModalVisible(!modalVisible)}}
+                onPress={() => {plantInfo == false ? setModalVisible2(!modalVisible2) : setModalVisible(!modalVisible)}}
                 buttonStyle={{
                     backgroundColor: '#DBEA8D',
                 }}
@@ -33,12 +63,13 @@ export default function PlantInfo() {
                 }}
             >
             </Button>
-            {plantInfo == 0 ? <PlantAddModal /> : <PlantInfoModal />}
-            {plantInfo == 1 ? null : (
+            {plantInfo == false ? <PlantAddModal /> : <PlantInfoModal />}
+            {plantInfo == true ? null : (
                 <View style={{alignItems: 'center'}}>
                     <Button 
                         title="등록하기"
-                        onPress={() => {setModalVisible2(!modalVisible2), setPlantInfo(1)}}
+                        // 여기서 plantInfo값 true를 db에 업데이트
+                        onPress={() => {setModalVisible2(!modalVisible2), updateData(true)}}
                         titleStyle={{ 
                             fontWeight: 'bold',
                             fontSize: 20,
@@ -62,7 +93,7 @@ export default function PlantInfo() {
     return (
         <View style={styles.container}>
             <View>
-                { plantInfo == 0 ? 
+                { plantInfo == false ? 
                 <View style={styles.container1}>
                     <Text style={styles.question}>?</Text>
                 </View> : 
@@ -73,7 +104,7 @@ export default function PlantInfo() {
             </View>
             <View>
                 <Text style={styles.plantName}>
-                    {plantInfo == 0 ? "식물 정보가 없습니다." : "🌿 대만 고무 나무 🌿"}
+                    {plantInfo == false ? "식물 정보가 없습니다." : "🌿 대만 고무 나무 🌿"}
                 </Text>
             </View>
             <View>
@@ -83,8 +114,8 @@ export default function PlantInfo() {
             </View>
             <View>
                 <Button 
-                    title={plantInfo == 0 ? "식물 정보 등록하기" : "식물 정보 더 보기"}
-                    onPress={() => {plantInfo == 0 ? setModalVisible2(true) : setModalVisible(true)}}
+                    title={plantInfo == false ? "식물 정보 등록하기" : "식물 정보 더 보기"}
+                    onPress={() => {plantInfo == false ? setModalVisible2(true) : setModalVisible(true)}}
                     titleStyle={{ 
                         fontWeight: 'bold',
                         fontSize: 20,
@@ -106,8 +137,8 @@ export default function PlantInfo() {
                     animationType="slide"
                     presentationStyle={"formSheet"}
                     transparent={false}
-                    visible={plantInfo == 0 ? modalVisible2 : modalVisible}
-                    onRequestClose={() => {plantInfo == 0 ? setModalVisible2(!modalVisible2) : setModalVisible(!modalVisible)}}> 
+                    visible={plantInfo == false ? modalVisible2 : modalVisible}
+                    onRequestClose={() => {plantInfo == false ? setModalVisible2(!modalVisible2) : setModalVisible(!modalVisible)}}> 
                     <View>
                         {ModalInfo}
                     </View>
@@ -126,10 +157,58 @@ const PlantInfoModal = () => {
 
 const PlantAddModal = () => {
 
+    useEffect(() => {
+        getPlant();
+    },[]);
+
+    const [search, setSearch] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+
+    const updateSearch = (search) => {
+        setSearch(search);
+        getPlant();
+      };
+
+    const renderPlant = ({ item }) => (
+        <View key={item.name}>
+          <Text>{item.name}</Text>
+        </View>
+    );
+
+    const getPlant = async () => {
+
+        const usersCollectionRef = collection(FIREBASE_DB, "Plants");
+
+        const qry = await query(usersCollectionRef);
+        const data = await getDocs(qry);
+        const newData = data.docs.map(doc => ({
+        ...doc.data()
+        }))
+        const result = [];
+        for (let index = 0; index < 5; index++) {
+            result.push({name:newData[index].plantName});
+        }
+        setSearchResults(result);
+        console.log(result);
+    }
+
     return (
-        <View style={{alignItems: 'center'}}>
-            <Text style={{fontSize: 30, fontWeight: 'bold', marginVertical: 50}}>나의 식물 정보 등록하기</Text>
-            <Text style={{fontSize: 18, fontWeight: '500', marginBottom: 20}}>여기에 검색창 만들어서 식물 등록하게 할 거임</Text>
+        <View style={{marginHorizontal: 30}}>
+            <Text style={{fontSize: 30, fontWeight: 'bold', marginTop: 50, alignItems: 'center'}}>나의 식물 정보 등록하기</Text>
+            <SearchBar
+                lightTheme
+                placeholder="등록할 식물을 입력하세요."
+                onChangeText={updateSearch}
+                value={search}
+                containerStyle={{marginVertical: 30, borderRadius: 20, backgroundColor: '#DBEA8D'}}
+                inputContainerStyle={{backgroundColor: 'white'}}
+                round
+            />
+            <FlatList
+                data={searchResults}
+                renderItem={renderPlant}
+                keyExtractor={(item) => item.id}
+            />
         </View>
     )
 }
