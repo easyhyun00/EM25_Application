@@ -1,28 +1,52 @@
 import { React, useState, useEffect } from 'react'
+import { useRoute } from '@react-navigation/native';
 import { Button } from '@rneui/base';
-import { SearchBar } from '@rneui/themed';
-import { View, Text, StyleSheet, Image, Modal, FlatList } from 'react-native'
-import { onAuthStateChanged } from 'firebase/auth';
-import { FIREBASE_AUTH, FIREBASE_DB } from '../firebaseConfig';
-import { doc, getDoc, updateDoc, collection, getDocs, query  } from 'firebase/firestore';
+import { View, Text, StyleSheet, Modal } from 'react-native';
+import { ProgressCircle } from 'react-native-svg-charts';
+import { FIREBASE_DB } from '../firebaseConfig';
+import { doc, getDoc,  onSnapshot } from 'firebase/firestore';
+import { PlantInfoModal } from '../components/PlantInfoModal'
+import { PlantAddModal } from '../components/PlantAddModal'
 
 export default function PlantInfo() {
 
-    const [userUid, setUserUid] = useState('');
+    const route = useRoute();
+
     const [plantInfo, setPlantInfo] = useState(false);
+    const [plantName, setPlantName] = useState('');
+    const [plantModal, setPlantModal] = useState('');
+
     const [modalVisible, setModalVisible] = useState(false);
     const [modalVisible2, setModalVisible2] = useState(false);
 
+    const [humidity, setHumidity] = useState('')
+    const [temperature, setTemperature] = useState('')
+    const [light, setLight] = useState('')
+
+    const [humidityInfo, setHumidityInfo] = useState('')
+    const [temperHighInfo, setTemperHighInfo] = useState('')
+    const [temperLowInfo, setTemperLowInfo] = useState('')
+    const [lightInfo, setLightInfo] = useState("????")
+
     // 데이터베이스 읽기
     useEffect(() => {
-        onAuthStateChanged(FIREBASE_AUTH, (user) => {
-          if(user) {
-            console.log(user.uid);
-            setUserUid(user.uid);
-            getData(user.uid);
-          }
-        })
+        getData(route.params.uid)
+        getFarmInfo()
     }, []);
+
+    // 센서값 가져오기
+    const getFarmInfo = () => {
+        // onSnapshot(doc(FIREBASE_DB, "farminformation", "tem_hum"), (doc) => { // 온습도
+        //     setHumidity(doc.data().humidity);
+        //     setTemperature(doc.data().temperature);
+        // });
+        // onSnapshot(doc(FIREBASE_DB, "farminformation", "light"), (doc) => { // 조도
+        //     setLight(doc.data().light)
+        // });
+        setHumidity(30)
+        setTemperature(25.1)
+        setLight(800)
+    }
 
     // 사용자 정보 가져오기
     const getData = async (uid) => { // 데이터 읽기
@@ -30,21 +54,36 @@ export default function PlantInfo() {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            console.log("Document data:", docSnap.data());
-            console.log(docSnap.data().plantRegistration);
-            console.log(docSnap.data().plantNo);
             setPlantInfo(docSnap.data().plantRegistration);
+            setPlantName(docSnap.data().plantName)
+            if(docSnap.data().plantName !== null) {
+                getPlantInfo(docSnap.data().plantNo)
+            }
         }
     }
 
-    const updateData = async (boolean) => {
-        setPlantInfo(boolean);
-        const washingtonRef = doc(FIREBASE_DB, "Users", userUid);
-        await updateDoc(washingtonRef, {
-            plantRegistration: boolean
-        });
+    // 해당 번호에 대한 식물 정보 가져오기
+    const getPlantInfo = async (plantNo) => {
+        const docRef = doc(FIREBASE_DB, "Plants", plantNo)
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            setPlantModal(docSnap.data());
+            setHumidityInfo(docSnap.data().plantHumidity)
+            setTemperHighInfo(docSnap.data().plantTemperatureHigh)
+            setTemperLowInfo(docSnap.data().plantTemperatureLow)
+            const lightinfo = docSnap.data().plantLight
+            if (lightinfo == 1) {
+                setLightInfo(1500)
+            } else if (lightinfo == 2) {
+                setLightInfo(800)
+            } else {
+                setLightInfo(300)
+            }
+        }
     }
 
+    // 모달
     const ModalInfo = (
         <View>
             <Button
@@ -63,54 +102,116 @@ export default function PlantInfo() {
                 }}
             >
             </Button>
-            {plantInfo == false ? <PlantAddModal /> : <PlantInfoModal />}
-            {plantInfo == true ? null : (
-                <View style={{alignItems: 'center'}}>
-                    <Button 
-                        title="등록하기"
-                        // 여기서 plantInfo값 true를 db에 업데이트
-                        onPress={() => {setModalVisible2(!modalVisible2), updateData(true)}}
-                        titleStyle={{ 
-                            fontWeight: 'bold',
-                            fontSize: 20,
-                            color: 'black',
-                        }}
-                        buttonStyle={{
-                            backgroundColor: '#DBEA8D',
-                            borderColor: 'transparent',
-                            borderRadius: 30,
-                        }}
-                        containerStyle={{
-                            width: 170,
-                            marginHorizontal: 50,
-                            marginVertical: 10,
-                        }}
-                    />
-                </View>) }
+            {plantInfo == false ? <PlantAddModal 
+            modalVisible2={modalVisible2} setModalVisible2={setModalVisible2} setPlantInfo={setPlantInfo} userUid={route.params.uid} /> 
+            : <PlantInfoModal plantModal={plantModal} />}
         </View> 
     )
 
+    // 메인
     return (
         <View style={styles.container}>
             <View>
-                { plantInfo == false ? 
-                <View style={styles.container1}>
-                    <Text style={styles.question}>?</Text>
-                </View> : 
-                <Image 
-                    source={{uri: "https://www.nongsaro.go.kr/cms_contents/301/13333_MF_REPR_ATTACH_01.jpg"}} 
-                    style={{width: 230, height: 210, marginBottom: 35, marginTop: -20, borderColor: '#BDDC1C', borderWidth: 5}} >                    
-                </Image> }
-            </View>
-            <View>
                 <Text style={styles.plantName}>
-                    {plantInfo == false ? "식물 정보가 없습니다." : "🌿 대만 고무 나무 🌿"}
+                    {plantInfo == false ? "🪴 식물 정보가 없습니다. 🪴" : "🪴 " + plantName + " 🪴"}
                 </Text>
             </View>
             <View>
-                <Text style={styles.plantStatus}>🌡️ 온도 : ??? ℃</Text>
-                <Text style={styles.plantStatus}>💧 습도 : ??? %</Text>
-                <Text style={styles.plantStatus}>☀️ 광 : ??? LUX</Text>
+                <View style={{ flexDirection: 'row' }}>
+                    <View style={styles.progressContainer}>
+                        <ProgressCircle
+                            style={styles.progress}
+                            progress={temperature/40}
+                            // progressColor={'#52E020'}
+                            progressColor={
+                                temperature > temperHighInfo ? '#FF0000' :
+                                temperature < temperLowInfo ? '#1E90FF' :
+                                '#52E020'
+                            }
+                            backgroundColor={'#D9D9D9'}
+                            strokeWidth={10}
+                        >
+                        </ProgressCircle>
+                        <View style={styles.textContainer}>
+                            <Text style={styles.temperatureText}>온도</Text>
+                            <Text style={styles.temperatureValue}>{temperature}℃</Text>
+                        </View>
+                    </View>
+                    <View style={styles.infoContainer}>   
+                            {
+                               temperature > temperHighInfo ? <Text style={styles.infoText1Red}>온도 높음 </Text> :
+                               temperature < temperLowInfo ? <Text style={styles.infoText1Blue}>온도 낮음 </Text> :
+                               <Text style={styles.infoText1}>만족 </Text>
+                            }                        
+                            <Text style={styles.infoText2}>적정 온도 {temperLowInfo} ~ {temperHighInfo} ℃</Text>
+                    </View>
+                </View>
+                <View style={{ flexDirection: 'row' }}>
+                    <View style={styles.progressContainer}>
+                        <ProgressCircle
+                            style={styles.progress}
+                            progress={humidity/100}
+                            progressColor={
+                                humidityInfo === '70% 이상'
+                                  ? humidity >= 70
+                                    ? '#52E020'
+                                    : '#278BFF'
+                                  : humidity >= 40 && humidity <= 70
+                                  ? '#52E020'
+                                  : humidity < 40
+                                  ? '#278BFF'
+                                  : '#F54040'
+                              }
+                            backgroundColor={'#D9D9D9'}
+                            strokeWidth={10}
+                        >
+                        </ProgressCircle>
+                        <View style={styles.textContainer}>
+                                <Text style={styles.temperatureText}>습도</Text>
+                                <Text style={styles.temperatureValue}>{humidity}%</Text>
+                        </View>
+                    </View>
+                    <View style={styles.infoContainer}>
+                            {
+                               humidityInfo === '70% 이상'
+                               ? humidity >= 70
+                                 ? <Text style={styles.infoText1}>만족</Text>
+                                 : <Text style={styles.infoText1Blue}>습도 낮음</Text>
+                               : humidity >= 40 && humidity <= 70
+                               ? <Text style={styles.infoText1}>만족</Text>
+                               : humidity < 40
+                               ? <Text style={styles.infoText1Blue}>습도 낮음</Text>
+                               : <Text style={styles.infoText1Red}>습도 높음</Text>
+                            }
+                            <Text style={styles.infoText2}>적정 습도 {humidityInfo}</Text>
+                    </View>
+                </View>
+                <View style={{ flexDirection: 'row' }}>
+                    <View style={styles.progressContainer}>
+                        <ProgressCircle
+                            style={styles.progress}
+                            progress={light/800}
+                            progressColor={light >= lightInfo ? '#52E020' : '#278BFF'}
+                            backgroundColor={'#D9D9D9'}
+                            strokeWidth={10}
+                        >
+                        </ProgressCircle>
+                        <View style={styles.textContainer}>
+                                    <Text style={styles.temperatureText}>광도</Text>
+                                    <Text style={styles.temperatureValue}>{light} LUX</Text>
+                        </View>
+                    </View>
+                    <View style={styles.infoContainer}>
+                            {
+                               light >= lightInfo ? <Text style={styles.infoText1}>만족</Text> :
+                               <Text style={styles.infoText1Blue}>광도 낮음</Text>
+                            }
+                            <Text style={styles.infoText2}>적정 광도 {lightInfo} LUX 이상</Text>
+                    </View>
+                </View>
+            </View>
+            <View style={{alignItems: 'center', justifyContent: 'center'}}>
+                <Text style={{fontSize: 25, marginBottom: 5, marginTop: 15, fontWeight:'bold',color: 'green'}}>모든 상태를 만족합니다 :)</Text>
             </View>
             <View>
                 <Button 
@@ -129,7 +230,7 @@ export default function PlantInfo() {
                     containerStyle={{
                         width: 170,
                         marginHorizontal: 50,
-                        marginVertical: 10,
+                        marginTop: 25,
                     }}
                 />
             </View>
@@ -147,72 +248,6 @@ export default function PlantInfo() {
     )
 }
 
-const PlantInfoModal = () => {
-    return (
-        <View style={{alignItems: 'center'}}>
-            <Text style={{fontSize: 50}}>여기에 식물 정보</Text>
-        </View>
-    )
-}
-
-const PlantAddModal = () => {
-
-    useEffect(() => {
-        getPlant();
-    },[]);
-
-    const [search, setSearch] = useState("");
-    const [searchResults, setSearchResults] = useState([]);
-
-    const updateSearch = (search) => {
-        setSearch(search);
-        getPlant();
-      };
-
-    const renderPlant = ({ item }) => (
-        <View key={item.name}>
-          <Text>{item.name}</Text>
-        </View>
-    );
-
-    const getPlant = async () => {
-
-        const usersCollectionRef = collection(FIREBASE_DB, "Plants");
-
-        const qry = await query(usersCollectionRef);
-        const data = await getDocs(qry);
-        const newData = data.docs.map(doc => ({
-        ...doc.data()
-        }))
-        const result = [];
-        for (let index = 0; index < 5; index++) {
-            result.push({name:newData[index].plantName});
-        }
-        setSearchResults(result);
-        console.log(result);
-    }
-
-    return (
-        <View style={{marginHorizontal: 30}}>
-            <Text style={{fontSize: 30, fontWeight: 'bold', marginTop: 50, alignItems: 'center'}}>나의 식물 정보 등록하기</Text>
-            <SearchBar
-                lightTheme
-                placeholder="등록할 식물을 입력하세요."
-                onChangeText={updateSearch}
-                value={search}
-                containerStyle={{marginVertical: 30, borderRadius: 20, backgroundColor: '#DBEA8D'}}
-                inputContainerStyle={{backgroundColor: 'white'}}
-                round
-            />
-            <FlatList
-                data={searchResults}
-                renderItem={renderPlant}
-                keyExtractor={(item) => item.id}
-            />
-        </View>
-    )
-}
-
 const styles = StyleSheet.create({
     container: {
       flex: 1, // 비율
@@ -221,9 +256,10 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
     },
     plantName: {
-        fontSize: 35,
+        fontSize: 40,
         fontWeight: 'bold',
-        marginBottom: 30,
+        marginBottom: 20,
+        marginTop: -25,
     },
     plantStatus: {
         fontSize: 28,
@@ -238,10 +274,60 @@ const styles = StyleSheet.create({
         backgroundColor: '#CCCCCC',
         justifyContent: 'center',
         alignItems: 'center',
-      },
-      question: {
+    },
+    question: {
         fontSize: 100,
         fontWeight: 'bold',
         color: '#000000',
+    },
+    progress: {
+        height: 100,
+        width: 140,
+    },
+    textContainer: {
+        position: 'absolute',
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      temperatureText: {
+        fontSize: 14,
+        color: '#000',
+      },
+      temperatureValue: {
+        fontSize: 24,
+        color: '#000',
+        marginLeft: 5,
+        fontWeight: 'bold'
+      },
+      progressContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginVertical: 20,
+      },
+      infoContainer: {
+        justifyContent: 'center',
+      },
+      infoText1: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#000',
+        marginBottom: 5,
+      },
+      infoText1Blue: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 5,
+        color: '#1E90FF',
+      },
+      infoText1Red: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#FF0000',
+        marginBottom: 5,
+      },
+      infoText2: {
+        fontSize: 18,
+        color: 'gray',
       },
 });

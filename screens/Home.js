@@ -1,34 +1,68 @@
 import { Button } from '@rneui/base';
-import React, { useEffect } from 'react';
+import { React, useEffect, useState }from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons, AntDesign, Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { FIREBASE_DB, FIREBASE_AUTH } from '../firebaseConfig';
-import { addDoc, collection, getDocs, query } from 'firebase/firestore';
+import { FIREBASE_AUTH } from '../firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 
-// const addTodo = async () => { // 데이터 쓰기
-//   const doc = await addDoc(collection(FIREBASE_DB,'plants'),{title: 'test',date: Date.now()});
-//   console.log(doc);
-// };
-
 export default function Home() {
+
+  const [userId, setUserId] = useState('')
 
   const navigation = useNavigation();
 
   useEffect(() => {
     onAuthStateChanged(FIREBASE_AUTH, (user) => {
       if(user) {
-        console.log(user.email);
+        console.log("user",user)
+        setUserId(user.uid)
       } else {
         navigation.navigate("Login");
       }
     })
 }, []);
 
+const renderItem=(item, index) => {
+
+  const navigation = useNavigation();
+  return(
+    <Button 
+          key={index}
+          onPress={()=>navigation.navigate(item.title,{uid : userId})}
+          title={
+          <View style={{ flexDirection: 'column', flex: 1  }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 21 }}>{item.title}</Text>
+            <Text style={{ fontStyle: 'italic', fontSize: 14, marginTop: 5 }}>
+              {item.subTitle}
+            </Text>
+          </View>
+          }
+          type="clear"
+          icon={item.icon}
+          titleStyle={{ 
+            fontWeight: 'bold',
+            fontSize: 20,
+            color: 'gray',
+          }}
+          buttonStyle={{
+            borderColor: 'transparent',
+            borderWidth: 15,
+            borderRadius: 30,
+          }}
+          containerStyle={{
+            width: 340,
+            marginHorizontal: 50,
+            marginRight: 20,
+            justifyContent: 'center',
+          }}
+      />
+  )
+}
+
   return (
     <View style={styles.container}>
-      <Text style={styles.textStyle}>식물 관리 시스템 🪴</Text>
+      <Text style={styles.textStyle}>식물 관리 서비스 🪴</Text>
       {<CustomInfo />}
       {data.map(renderItem)}
     </View>
@@ -36,24 +70,8 @@ export default function Home() {
 };
 
 const CustomInfo = () => {
-
-  const usersCollectionRef = collection(FIREBASE_DB, "Plants");
-
-  const getData = async () => { // 데이터 읽기
-    const qry = await query(usersCollectionRef);
-    const data = await getDocs(qry);
-    const newData = data.docs.map(doc => ({
-      ...doc.data()
-    }))
-    for (let index = 0; index < newData.length; index++) {
-      console.log("================>")
-      console.log(newData[index]);
-    }
-  }
-
   return (
     <Button 
-        onPress={()=>getData()}
         title={
         <View style={{ flexDirection: 'column', flex: 1 }}>
           <Text style={{ fontWeight: 'bold', fontSize: 21 }}>나의 실내 정원을 관리하세요 !</Text>
@@ -94,44 +112,8 @@ const data = [
   {key:"3",title:"식물 타임라인 보기",subTitle:"일주일 전과 달라진 나의 식물을 봐요.",icon:(<AntDesign name="picture" size={30} color="black" style={{marginRight: 15, marginLeft: 5}} />)},
   {key:"4",title:"다른 식물 알아 보기",subTitle:"내 식물말고 다른 식물을 알아봐요.",icon:(<AntDesign name="search1" size={30} color="black" style={{marginRight: 15, marginLeft: 5}} />)},
   {key:"5",title:"팀원 정보 보기",subTitle:"임베디드 시스템 공학과 EM25를 더 알아봐요.",icon:(<AntDesign name="infocirlceo" size={30} color="black" style={{marginRight: 15, marginLeft: 5}} />)},
-  {key:"6",title:"OpenApi",subTitle:"api저장",icon:(<AntDesign name="infocirlceo" size={30} color="black" style={{marginRight: 15, marginLeft: 5}} />)},
+  //{key:"6",title:"OpenApi",subTitle:"api저장",icon:(<AntDesign name="infocirlceo" size={30} color="black" style={{marginRight: 15, marginLeft: 5}} />)},
 ]
-
-const renderItem=(item, index) => {
-    const navigation = useNavigation();
-    return(
-      <Button 
-            key={index}
-            onPress={()=>navigation.navigate(item.title)}
-            title={
-            <View style={{ flexDirection: 'column', flex: 1  }}>
-              <Text style={{ fontWeight: 'bold', fontSize: 21 }}>{item.title}</Text>
-              <Text style={{ fontStyle: 'italic', fontSize: 14, marginTop: 5 }}>
-                {item.subTitle}
-              </Text>
-            </View>
-            }
-            type="clear"
-            icon={item.icon}
-            titleStyle={{ 
-              fontWeight: 'bold',
-              fontSize: 20,
-              color: 'gray',
-            }}
-            buttonStyle={{
-              borderColor: 'transparent',
-              borderWidth: 15,
-              borderRadius: 30,
-            }}
-            containerStyle={{
-              width: 340,
-              marginHorizontal: 50,
-              marginRight: 20,
-              justifyContent: 'center',
-            }}
-        />
-    )
-}
 
 const styles = StyleSheet.create({
   container: {
