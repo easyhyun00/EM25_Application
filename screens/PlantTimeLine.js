@@ -1,44 +1,62 @@
-import React, { useState } from 'react'
-import { View, Text, StyleSheet, Image } from 'react-native'
+import React, { useState, useEffect } from 'react'
+import { View, Text, StyleSheet, Image, ScrollView } from 'react-native'
+import { FIREBASE_IMG } from '../firebaseConfig';
+import { ref, listAll, getDownloadURL  } from "firebase/storage";
+
 
 export default function PlantTimeLine(){
 
     const [timeAlign, setTimeAlign] = useState(true)
+    const [imageUrlList, setImageUrlList] = useState([]);
+
+    useEffect(()=>{
+        const listRef  = ref(FIREBASE_IMG, 'camera_test_1/');
+        // imgList = []
+
+        const fetchImg = async () => {
+            try {
+                const res = await listAll(listRef);
+                const imgList = [];
+
+                for (const itemRef of res.items) {
+                    const url = await getDownloadURL(itemRef);
+                    const indexedDB = itemRef.name;
+                    imgList.push({ key: indexedDB, url: url });
+                }
+                //console.log(imgList)
+                imgList.sort((a, b) => (a.key > b.key) ? -1 : 1) // 오름차순은 1 : -1 로
+                setImageUrlList(imgList)
+
+            } catch(err) {
+                console.log(err)
+            }
+        }
+        fetchImg();
+    },[])
 
     return (
-        <View style={styles.container}>
+        <View>
             <View style={styles.container2}>
-                <Text style={timeAlign == true ? styles.textOn : styles.textOff} onPress={()=>setTimeAlign(true)}>최신 순으로</Text>
-                <Text>{"    "}</Text>
-                <Text style={timeAlign == true ? styles.textOff : styles.textOn} onPress={()=>setTimeAlign(false)}>오래된 순으로</Text>
+                    <Text style={timeAlign == true ? styles.textOn : styles.textOff} onPress={()=>{setTimeAlign(true); setImageUrlList(imageUrlList.sort((a, b) => (a.key > b.key) ? -1 : 1))}}>최신 순으로</Text>
+                    <Text>{"    "}</Text>
+                    <Text style={timeAlign == true ? styles.textOff : styles.textOn} onPress={()=>{setTimeAlign(false); setImageUrlList(imageUrlList.sort((a, b) => (a.key > b.key) ? 1 : -1))}}>오래된 순으로</Text>
             </View>
-            <View style={styles.container3}>
-                {data.length <= 6 ? data.map(renderItem):
-                data.map(d =>{
-                    if (d.key <= 6) {
-                        return renderItem(d);
-                    }
-                })}
-            </View>
-            <View style={styles.container4}>
-                <Text style={{fontSize: 30}}>여기에 페이징 버튼</Text>
-            </View>
+            <ScrollView contentContainerStyle={{ alignItems: 'center', marginHorizontal: 30 }}>
+                <View style={styles.container3}>
+                    {/* {imgList.length < 6 ? imgList.map(renderItem):
+                    imgList.map(d =>{
+                        if (d.key < 6) {
+                            return renderItem(d);
+                        }
+                    })} */}
+                    {setImageUrlList ? imageUrlList.map(renderItem) : null}
+                </View>
+            </ScrollView>
         </View>
     )
 }
 
-const data = [
-    {key:"1",url:"https://www.nongsaro.go.kr/cms_contents/301/13333_MF_REPR_ATTACH_01.jpg"},
-    {key:"2",url:"https://www.nongsaro.go.kr/cms_contents/301/13333_MF_REPR_ATTACH_01.jpg"},
-    {key:"3",url:"https://www.nongsaro.go.kr/cms_contents/301/13333_MF_REPR_ATTACH_01.jpg"},
-    {key:"4",url:"https://www.nongsaro.go.kr/cms_contents/301/13333_MF_REPR_ATTACH_01.jpg"},
-    {key:"5",url:"https://www.nongsaro.go.kr/cms_contents/301/13333_MF_REPR_ATTACH_01.jpg"},
-    {key:"6",url:"https://www.nongsaro.go.kr/cms_contents/301/13333_MF_REPR_ATTACH_01.jpg"},
-]
-
-
 const renderItem=(item) => {
-    // const navigation = useNavigation();
     return(
         <Image key={item.key} source={{uri: item.url}} style={styles.image} />
     )
@@ -54,7 +72,8 @@ const styles = StyleSheet.create({
     container2: {
         flexDirection: 'row', 
         alignItems: 'flex-start',
-        marginBottom: 10,
+        marginTop: 20,
+        marginLeft: 30,
     },
     container3: {
         alignItems: 'center',
@@ -76,10 +95,10 @@ const styles = StyleSheet.create({
         color: 'gray',
     },
     image: {
-        width: '42%',
+        width: '45%',
         aspectRatio: 1,
         marginBottom: 30,
         borderColor: '#BDDC1C', 
-        borderWidth: 5
+        borderWidth: 3
     }
 });

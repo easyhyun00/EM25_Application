@@ -1,8 +1,9 @@
 import { React, useState, useEffect } from 'react'
 import { useRoute } from '@react-navigation/native';
-import { Button } from '@rneui/base';
+import { Button, SpeedDial  } from '@rneui/base';
 import { View, Text, StyleSheet, Modal } from 'react-native';
-import { ProgressCircle } from 'react-native-svg-charts';
+//import { ProgressCircle } from 'react-native-svg-charts';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { FIREBASE_DB } from '../firebaseConfig';
 import { doc, getDoc,  onSnapshot } from 'firebase/firestore';
 import { PlantInfoModal } from '../components/PlantInfoModal'
@@ -28,11 +29,13 @@ export default function PlantInfo() {
     const [temperLowInfo, setTemperLowInfo] = useState('')
     const [lightInfo, setLightInfo] = useState("????")
 
+    const [open, setOpen] = useState(false);
+
     // 데이터베이스 읽기
     useEffect(() => {
         getData(route.params.uid)
         getFarmInfo()
-    }, []);
+    },[]);
 
     // 센서값 가져오기
     const getFarmInfo = () => {
@@ -45,7 +48,7 @@ export default function PlantInfo() {
         // });
         setHumidity(30)
         setTemperature(25.1)
-        setLight(800)
+        setLight(700)
     }
 
     // 사용자 정보 가져오기
@@ -56,7 +59,7 @@ export default function PlantInfo() {
         if (docSnap.exists()) {
             setPlantInfo(docSnap.data().plantRegistration);
             setPlantName(docSnap.data().plantName)
-            if(docSnap.data().plantName !== null) {
+            if(docSnap.data().plantName !== "") {
                 getPlantInfo(docSnap.data().plantNo)
             }
         }
@@ -103,7 +106,8 @@ export default function PlantInfo() {
             >
             </Button>
             {plantInfo == false ? <PlantAddModal 
-            modalVisible2={modalVisible2} setModalVisible2={setModalVisible2} setPlantInfo={setPlantInfo} userUid={route.params.uid} /> 
+            modalVisible2={modalVisible2} setModalVisible2={setModalVisible2} setPlantInfo={setPlantInfo} userUid={route.params.uid} setPlantName={setPlantName}
+            setPlantModal={setPlantModal} setHumidityInfo={setHumidityInfo} setTemperHighInfo={setTemperHighInfo} setTemperLowInfo={setTemperLowInfo} setLightInfo={setLightInfo} /> 
             : <PlantInfoModal plantModal={plantModal} />}
         </View> 
     )
@@ -113,10 +117,103 @@ export default function PlantInfo() {
         <View style={styles.container}>
             <View>
                 <Text style={styles.plantName}>
-                    {plantInfo == false ? "🪴 식물 정보가 없습니다. 🪴" : "🪴 " + plantName + " 🪴"}
+                    {plantInfo == false ? "식물 정보가 없습니다." : "🪴 " + plantName + " 🪴"}
                 </Text>
             </View>
             <View>
+                <View style={{ flexDirection: 'row' }}>
+                    <View style={styles.progressContainer}>
+                        <AnimatedCircularProgress
+                            size={105}
+                            width={12}
+                            fill={temperature*(100/40)}
+                            rotation={0}
+                            tintColor={
+                                temperature > temperHighInfo ? '#FF0000' :
+                                temperature < temperLowInfo ? '#1E90FF' :
+                                '#52E020'
+                            }
+                            backgroundColor="#D9D9D9">
+                        </AnimatedCircularProgress>
+                        <View style={styles.textContainer}>
+                            <Text style={styles.temperatureText}>온도</Text>
+                            <Text style={styles.temperatureValue}>{temperature}℃</Text>
+                        </View>
+                    </View> 
+                    <View style={styles.infoContainer}>   
+                        {
+                            temperature > temperHighInfo ? <Text style={styles.infoText1Red}>온도 높음 </Text> :
+                            temperature < temperLowInfo ? <Text style={styles.infoText1Blue}>온도 낮음 </Text> :
+                            <Text style={styles.infoText1}>만족 </Text>
+                        }                        
+                        <Text style={styles.infoText2}>적정 온도 {temperLowInfo} ~ {temperHighInfo} ℃</Text>
+                    </View>
+                </View>
+                <View style={{ flexDirection: 'row' }}>
+                    <View style={styles.progressContainer}>
+                        <AnimatedCircularProgress
+                            size={105}
+                            width={12}
+                            fill={parseInt(humidity)}
+                            rotation={0}
+                            tintColor={
+                                humidityInfo === '70% 이상'
+                                  ? humidity >= 70
+                                    ? '#52E020'
+                                    : '#278BFF'
+                                  : humidity >= 40 && humidity <= 70
+                                  ? '#52E020'
+                                  : humidity < 40
+                                  ? '#278BFF'
+                                  : '#F54040'
+                            }
+                            backgroundColor="#D9D9D9">
+                        </AnimatedCircularProgress>
+                        <View style={styles.textContainer}>
+                            <Text style={styles.temperatureText}>습도</Text>
+                            <Text style={styles.temperatureValue}>{humidity}%</Text>
+                        </View>
+                    </View> 
+                    <View style={styles.infoContainer}>   
+                        {
+                            humidityInfo === '70% 이상'
+                            ? humidity >= 70
+                                ? <Text style={styles.infoText1}>만족</Text>
+                                : <Text style={styles.infoText1Blue}>습도 낮음</Text>
+                            : humidity >= 40 && humidity <= 70
+                            ? <Text style={styles.infoText1}>만족</Text>
+                            : humidity < 40
+                            ? <Text style={styles.infoText1Blue}>습도 낮음</Text>
+                            : <Text style={styles.infoText1Red}>습도 높음</Text>
+                        }
+                        <Text style={styles.infoText2}>적정 습도 {humidityInfo}</Text>
+                    </View>
+                </View>
+                <View style={{ flexDirection: 'row' }}>
+                    <View style={styles.progressContainer}>
+                        <AnimatedCircularProgress
+                            size={105}
+                            width={12}
+                            fill={light/10}
+                            rotation={0}
+                            tintColor={light >= lightInfo ? '#52E020' : '#278BFF'}
+                            backgroundColor="#D9D9D9">
+                        </AnimatedCircularProgress>
+                        <View style={styles.textContainer}>
+                            <Text style={styles.temperatureText}>광도</Text>
+                            <Text style={styles.temperatureValue}>{light} LUX</Text>
+                        </View>
+                    </View> 
+                    <View style={styles.infoContainer}>   
+                        {
+                            light >= lightInfo ? <Text style={styles.infoText1}>만족</Text> :
+                            <Text style={styles.infoText1Blue}>광도 낮음</Text>
+                        }
+                        <Text style={styles.infoText2}>적정 광도 {lightInfo} LUX 이상</Text>
+                    </View>
+                </View>
+            </View>
+            {/* <View>
                 <View style={{ flexDirection: 'row' }}>
                     <View style={styles.progressContainer}>
                         <ProgressCircle
@@ -209,9 +306,9 @@ export default function PlantInfo() {
                             <Text style={styles.infoText2}>적정 광도 {lightInfo} LUX 이상</Text>
                     </View>
                 </View>
-            </View>
+            </View> */}
             <View style={{alignItems: 'center', justifyContent: 'center'}}>
-                <Text style={{fontSize: 25, marginBottom: 5, marginTop: 15, fontWeight:'bold',color: 'green'}}>모든 상태를 만족합니다 :)</Text>
+                <Text style={{fontSize: 25, marginBottom: 5, marginTop: 15, fontWeight:'bold',color: 'green'}}>(미완성)모든 상태를 만족합니다 :)</Text>
             </View>
             <View>
                 <Button 
@@ -234,6 +331,26 @@ export default function PlantInfo() {
                     }}
                 />
             </View>
+            {plantInfo ? 
+                <SpeedDial
+                    isOpen={open}
+                    icon={{ name: 'edit', color: '#fff' }}
+                    openIcon={{ name: 'close', color: '#fff' }}
+                    onOpen={() => setOpen(!open)}
+                    onClose={() => setOpen(!open)}
+                    color='#F26A8B'>
+                    <SpeedDial.Action
+                        icon={{ name: 'add', color: '#fff' }}
+                        title="Edit"
+                        onPress={() => console.log('식물 등록하는 모달로')}
+                    />
+                    <SpeedDial.Action
+                        icon={{ name: 'delete', color: '#fff' }}
+                        title="Delete"
+                        onPress={() => console.log('식물 등록하지 않는 상태 화면으로')}
+                    />
+                </SpeedDial>
+            : null }
             <Modal
                     animationType="slide"
                     presentationStyle={"formSheet"}
@@ -303,9 +420,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginVertical: 20,
+        marginVertical: 15,
       },
       infoContainer: {
+        marginLeft: 20,
         justifyContent: 'center',
       },
       infoText1: {
