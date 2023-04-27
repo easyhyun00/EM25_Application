@@ -35,7 +35,7 @@ export default function PlantTimeLine(){
     },[])
 
     return (
-        <View>
+        <View style={styles.container}>
             <View style={styles.container2}>
                     <Text style={timeAlign == true ? styles.textOn : styles.textOff} onPress={()=>{setTimeAlign(true); setImageUrlList(imageUrlList.sort((a, b) => (a.key > b.key) ? -1 : 1))}}>최신 순으로</Text>
                     <Text>{"    "}</Text>
@@ -43,12 +43,6 @@ export default function PlantTimeLine(){
             </View>
             <ScrollView contentContainerStyle={{ alignItems: 'center', marginHorizontal: 30 }}>
                 <View style={styles.container3}>
-                    {/* {imgList.length < 6 ? imgList.map(renderItem):
-                    imgList.map(d =>{
-                        if (d.key < 6) {
-                            return renderItem(d);
-                        }
-                    })} */}
                     {setImageUrlList ? imageUrlList.map(renderItem) : null}
                 </View>
             </ScrollView>
@@ -66,7 +60,6 @@ const styles = StyleSheet.create({
     container: {
       flex: 1, // 비율
       backgroundColor: '#EDEFE3',
-      paddingHorizontal: 40,
       justifyContent: 'center'
     },
     container2: {

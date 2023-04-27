@@ -3,12 +3,14 @@ import { React, useEffect, useState }from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons, AntDesign, Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { FIREBASE_AUTH } from '../firebaseConfig';
+import { FIREBASE_AUTH, FIREBASE_DB } from '../firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 
 export default function Home() {
 
   const [userId, setUserId] = useState('')
+  const [plantRegister, setPlantRegister] = useState(true)
 
   const navigation = useNavigation();
 
@@ -17,11 +19,28 @@ export default function Home() {
       if(user) {
         console.log("user",user)
         setUserId(user.uid)
+        // getData(user.uid)
       } else {
         navigation.navigate("Login");
       }
     })
-}, []);
+},[]);
+
+// // 사용자 정보 가져오기
+// const getData = async (uid) => { // 데이터 읽기
+//   const docRef = doc(FIREBASE_DB, "Users", uid)
+//   const docSnap = await getDoc(docRef);
+
+//   if (docSnap.exists()) {
+//       if (docSnap.data().plantRegistration) {
+//         setPlantRegister(true)
+//       } else {
+//         setPlantRegister(false)
+//       }
+//   }
+// }
+
+console.log("plantRegister",plantRegister)
 
 const renderItem=(item, index) => {
 
