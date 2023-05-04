@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, Image, ScrollView } from 'react-native'
+import { View, Text, StyleSheet, Image, ScrollView, TouchableHighlight, Modal, TouchableWithoutFeedback  } from 'react-native'
 import { FIREBASE_IMG } from '../firebaseConfig';
-import { ref, listAll, getDownloadURL  } from "firebase/storage";
+import { ref, listAll, getDownloadURL, getMetadata  } from "firebase/storage";
+import { Button } from 'react-native-elements';
 
 
 export default function PlantTimeLine(){
 
     const [timeAlign, setTimeAlign] = useState(true)
     const [imageUrlList, setImageUrlList] = useState([]);
+
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedImageUri, setSelectedImageUri] = useState(null);
+    const [selectedImageDate, setSelectedImageDate] = useState(null);
 
     useEffect(()=>{
         const listRef  = ref(FIREBASE_IMG, 'camera_test_1/');
@@ -19,11 +24,15 @@ export default function PlantTimeLine(){
                 const imgList = [];
 
                 for (const itemRef of res.items) {
+                    //console.log(itemRef)
                     const url = await getDownloadURL(itemRef);
                     const indexedDB = itemRef.name;
-                    imgList.push({ key: indexedDB, url: url });
+
+                    const metadata = await getMetadata(itemRef);  // 파일 메타데이터 가져오기
+                    const createdAt = metadata.timeCreated; 
+
+                    imgList.push({ key: indexedDB, url: url, date: createdAt });
                 }
-                //console.log(imgList)
                 imgList.sort((a, b) => (a.key > b.key) ? -1 : 1) // 오름차순은 1 : -1 로
                 setImageUrlList(imgList)
 
@@ -33,6 +42,31 @@ export default function PlantTimeLine(){
         }
         fetchImg();
     },[])
+
+    const openModal = (uri,iTemDate) => {
+
+        const dateObj = new Date(iTemDate);
+
+        const year = dateObj.getFullYear();
+        const month = dateObj.getMonth() + 1; // getMonth()는 0부터 시작하므로 1을 더해줍니다.
+        const date = dateObj.getDate();
+        const hour = dateObj.getHours();
+        const minute = dateObj.getMinutes();
+
+        const formattedDate = `${year}년 ${month}월 ${date}일 ${hour}시 ${minute}분`;
+
+        setSelectedImageUri(uri);
+        setSelectedImageDate(formattedDate)
+        setModalVisible(true);
+    }
+
+    const renderItem=(item) => {
+        return(
+            <TouchableHighlight onPress={() => openModal(item.url,item.date)} key={item.key} style={{marginBottom: 30}}>
+                <Image source={{uri: item.url}} style={styles.image} />
+            </TouchableHighlight> 
+        )
+    }
 
     return (
         <View style={styles.container}>
@@ -46,13 +80,41 @@ export default function PlantTimeLine(){
                     {setImageUrlList ? imageUrlList.map(renderItem) : null}
                 </View>
             </ScrollView>
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => {
+                    setModalVisible(!modalVisible);
+                }}>
+                {/* <TouchableWithoutFeedback onPress={() => setModalVisible(false)}> */}
+                    <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        <Text style={styles.dateText}>{selectedImageDate}</Text>
+                        <Image source={{uri: selectedImageUri}} style={styles.modalImage} />
+                        <Button 
+                            title="닫기"
+                            titleStyle={{ 
+                                fontWeight: 'bold',
+                                fontSize: 20,
+                                color: 'black',
+                            }}
+                            buttonStyle={{
+                                backgroundColor: '#DBEA8D',
+                                borderColor: 'transparent',
+                                borderRadius: 30,
+                                marginTop: 10,
+                            }}
+                            containerStyle={{
+                                width: 70,
+                            }}
+                            onPress={() => setModalVisible(false)}
+                        />
+                    </View>
+                    </View>
+                {/* </TouchableWithoutFeedback> */}
+            </Modal>
         </View>
-    )
-}
-
-const renderItem=(item) => {
-    return(
-        <Image key={item.key} source={{uri: item.url}} style={styles.image} />
     )
 }
 
@@ -88,10 +150,45 @@ const styles = StyleSheet.create({
         color: 'gray',
     },
     image: {
-        width: '45%',
+        //width: '45%',
+        width: 145, // 크기 조정
+        height: 145,
         aspectRatio: 1,
-        marginBottom: 30,
         borderColor: '#BDDC1C', 
-        borderWidth: 3
-    }
+        borderWidth: 3,
+    },
+    modalImage: {
+        width: 300,
+        height: 235,
+        borderColor: '#BDDC1C', 
+        borderWidth: 3,
+    },
+    centeredView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 22,
+      },
+      modalView: {
+        margin: 20,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        //padding: 20,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+      },
+      dateText: {
+        fontWeight: "bold",
+        fontSize: 18,
+        marginBottom: 7,
+      }
 });
