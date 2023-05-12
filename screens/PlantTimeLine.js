@@ -13,6 +13,7 @@ export default function PlantTimeLine(){
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedImageUri, setSelectedImageUri] = useState(null);
     const [selectedImageDate, setSelectedImageDate] = useState(null);
+    const [selectedImageKey, setSelectedImageKey] = useState(null);
 
     useEffect(()=>{
         const listRef  = ref(FIREBASE_IMG, 'camera_test_1/');
@@ -24,7 +25,6 @@ export default function PlantTimeLine(){
                 const imgList = [];
 
                 for (const itemRef of res.items) {
-                    //console.log(itemRef)
                     const url = await getDownloadURL(itemRef);
                     const indexedDB = itemRef.name;
 
@@ -33,8 +33,15 @@ export default function PlantTimeLine(){
 
                     imgList.push({ key: indexedDB, url: url, date: createdAt });
                 }
-                imgList.sort((a, b) => (a.key > b.key) ? -1 : 1) // 오름차순은 1 : -1 로
-                setImageUrlList(imgList)
+                // imgList.sort((a, b) => (a.key > b.key) ? -1 : 1) // 오름차순은 1 : -1 로
+                const newDataList = imgList.map((item, index) => {
+                    return {
+                      ...item,
+                      key: index + 1
+                    };
+                });
+                newDataList.sort((a, b) => (a.key > b.key) ? -1 : 1)
+                setImageUrlList(newDataList)
 
             } catch(err) {
                 console.log(err)
@@ -43,7 +50,7 @@ export default function PlantTimeLine(){
         fetchImg();
     },[])
 
-    const openModal = (uri,iTemDate) => {
+    const openModal = (uri,iTemDate,key) => {
 
         const dateObj = new Date(iTemDate);
 
@@ -56,13 +63,14 @@ export default function PlantTimeLine(){
         const formattedDate = `${year}년 ${month}월 ${date}일 ${hour}시 ${minute}분`;
 
         setSelectedImageUri(uri);
-        setSelectedImageDate(formattedDate)
+        setSelectedImageDate(formattedDate);
+        setSelectedImageKey(key);
         setModalVisible(true);
     }
 
     const renderItem=(item) => {
         return(
-            <TouchableHighlight onPress={() => openModal(item.url,item.date)} key={item.key} style={{marginBottom: 30}}>
+            <TouchableHighlight onPress={() => openModal(item.url,item.date,item.key)} key={item.key} style={{marginBottom: 30}}>
                 <Image source={{uri: item.url}} style={styles.image} />
             </TouchableHighlight> 
         )
@@ -90,13 +98,16 @@ export default function PlantTimeLine(){
                 {/* <TouchableWithoutFeedback onPress={() => setModalVisible(false)}> */}
                     <View style={styles.centeredView}>
                     <View style={styles.modalView}>
-                        <Text style={styles.dateText}>{selectedImageDate}</Text>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Text style={styles.dateText}>{selectedImageDate}</Text>
+                            <Text style={{fontSize: 18,marginBottom: 7,marginRight: 5}}>{selectedImageKey} 주차</Text>
+                        </View>
                         <Image source={{uri: selectedImageUri}} style={styles.modalImage} />
                         <Button 
                             title="닫기"
                             titleStyle={{ 
                                 fontWeight: 'bold',
-                                fontSize: 20,
+                                fontSize: 18,
                                 color: 'black',
                             }}
                             buttonStyle={{
@@ -106,7 +117,7 @@ export default function PlantTimeLine(){
                                 marginTop: 10,
                             }}
                             containerStyle={{
-                                width: 70,
+                                width: 65,
                             }}
                             onPress={() => setModalVisible(false)}
                         />
@@ -187,8 +198,10 @@ const styles = StyleSheet.create({
         elevation: 5,
       },
       dateText: {
+        flex: 1,
         fontWeight: "bold",
         fontSize: 18,
         marginBottom: 7,
+        marginLeft: 6,
       }
 });

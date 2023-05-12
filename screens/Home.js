@@ -19,28 +19,26 @@ export default function Home() {
       if(user) {
         console.log("user",user)
         setUserId(user.uid)
-        // getData(user.uid)
+        getData(user.uid)
       } else {
         navigation.navigate("Login");
       }
     })
 },[]);
 
-// // 사용자 정보 가져오기
-// const getData = async (uid) => { // 데이터 읽기
-//   const docRef = doc(FIREBASE_DB, "Users", uid)
-//   const docSnap = await getDoc(docRef);
+// 사용자 정보 가져오기
+const getData = async (uid) => { // 데이터 읽기
+  const docRef = doc(FIREBASE_DB, "Users", uid)
+  const docSnap = await getDoc(docRef);
 
-//   if (docSnap.exists()) {
-//       if (docSnap.data().plantRegistration) {
-//         setPlantRegister(true)
-//       } else {
-//         setPlantRegister(false)
-//       }
-//   }
-// }
-
-console.log("plantRegister",plantRegister)
+  if (docSnap.exists()) {
+      if (docSnap.data().plantRegistration) {
+        setPlantRegister(true)
+      } else {
+        setPlantRegister(false)
+      }
+  }
+}
 
 const renderItem=(item, index) => {
 

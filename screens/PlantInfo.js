@@ -91,7 +91,8 @@ export default function PlantInfo() {
         <View>
             <Button
                 title="닫기"
-                onPress={() => {plantInfo == false ? setModalVisible2(!modalVisible2) : setModalVisible(!modalVisible)}}
+                onPress={() => {plantInfo == false ? 
+                    plantName != '' ? (setModalVisible2(!modalVisible2), setPlantInfo(true)) : setModalVisible2(!modalVisible2) : setModalVisible(!modalVisible)}}
                 buttonStyle={{
                     backgroundColor: '#DBEA8D',
                 }}
