@@ -8,7 +8,7 @@ export default function App() {
 
   useEffect(() => {
     console.log("======>")
-    // 푸시 알림 채널 설정 (안드로이드만 해당됨)
+    // 푸시 알림 채널 설정
     if (Platform.OS === 'android') {
       Notifications.setNotificationChannelAsync('default', {
         name: 'default',
@@ -20,7 +20,7 @@ export default function App() {
 
     // 오전 7시 00분에 푸시 알림 스케줄링
     const trigger = {
-      hour: 7,
+      hour: 14,
       minute: 0,
       repeats: true,
     };
@@ -37,8 +37,8 @@ export default function App() {
     Notifications.setNotificationHandler({
       handleNotification: async () => {
         const today = new Date();
-        const dayOfWeek = today.getDay(); // 0 (Sunday) through 6 (Saturday)
-        if (dayOfWeek === 5) { // 목요일
+        const dayOfWeek = today.getDay(); // 0 (일요일) through 6 (토요일)
+        if (dayOfWeek === 2) { // 금요일
           return {
             shouldShowAlert: true,
             shouldPlaySound: true,

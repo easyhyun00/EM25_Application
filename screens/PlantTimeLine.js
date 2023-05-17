@@ -33,14 +33,13 @@ export default function PlantTimeLine(){
 
                     imgList.push({ key: indexedDB, url: url, date: createdAt });
                 }
-                // imgList.sort((a, b) => (a.key > b.key) ? -1 : 1) // 오름차순은 1 : -1 로
                 const newDataList = imgList.map((item, index) => {
                     return {
                       ...item,
                       key: index + 1
                     };
                 });
-                newDataList.sort((a, b) => (a.key > b.key) ? -1 : 1)
+                newDataList.sort((a, b) => (a.key > b.key) ? -1 : 1) // 오름차순 1 : -1
                 setImageUrlList(newDataList)
 
             } catch(err) {

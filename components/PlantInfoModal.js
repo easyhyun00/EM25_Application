@@ -9,7 +9,6 @@ export const PlantInfoModal = (props) => {
 
     return (
         <View style={{alignItems: 'center'}}>
-            {/* <ScrollView contentContainerStyle={{ alignItems: 'center' }}> */}
                 <Image 
                     source={{uri: plantModal.plantImg}} 
                     style={{width: 180, height: 150, marginBottom: 18, marginTop: 18, borderColor: '#BDDC1C', borderWidth: 5}} >                    
@@ -34,7 +33,6 @@ export const PlantInfoModal = (props) => {
                         "낮은, 중간, 높은 광도 (300~10,000 Lux)" }
                     </Text>
                 </View>
-            {/* </ScrollView> */}
         </View>
     )
 }

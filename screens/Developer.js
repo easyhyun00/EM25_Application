@@ -23,19 +23,19 @@ const data = [
     {
       id: '1',
       name: '201901756 오소민',
-      email: 'ㅇㅇㅇ@inu.ac.kr',
+      email: 'qordlfghd754@naver.com',
       image: "https://firebasestorage.googleapis.com/v0/b/em25-c1a70.appspot.com/o/image%2F%EC%82%AC%EB%9E%8C1.png?alt=media&token=b7d30947-5904-4c94-a4a1-994600b547f6",
     },
     {
       id: '2',
       name: '201901762 이지현',
-      email: '2455jh@inu.ac.kr',
+      email: '2455jh@naver.com',
       image: "https://firebasestorage.googleapis.com/v0/b/em25-c1a70.appspot.com/o/image%2F%EC%82%AC%EB%9E%8C2.png?alt=media&token=2e5c85e0-b3f9-46da-8c59-9c1e957313e5",
     },
     {
       id: '3',
       name: '201901773 최규진',
-      email: 'ㅇㅇㅇ@inu.ac.kr',
+      email: 'i0797958@naver.com',
       image: "https://firebasestorage.googleapis.com/v0/b/em25-c1a70.appspot.com/o/image%2F%EC%82%AC%EB%9E%8C3.png?alt=media&token=5d4c1de5-655b-4334-83a2-f57438c94d7e",
     },
 ];

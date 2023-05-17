@@ -4,7 +4,8 @@ import { View, Text, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FIREBASE_DB } from '../firebaseConfig';
 import { doc, updateDoc, collection, getDocs, query, getDoc } from 'firebase/firestore';
-import { AutocompleteDropdown } from 'react-native-autocomplete-dropdown'
+import { SelectList } from 'react-native-dropdown-select-list'
+import { FontAwesome } from '@expo/vector-icons';
 
 // 식물 정보 등록하는 모달
 export const PlantAddModal = (props) => {
@@ -24,9 +25,8 @@ export const PlantAddModal = (props) => {
     const setLightInfo = props.setLightInfo
 
     const [plantList, setPlantList] = useState([]);
-    const [selectedItem, setSelectedItem] = useState("");
 
-    const [input, setInput] = useState(true)
+    const [selected, setSelected] = useState("");
 
     useEffect(() => {
         getPlant();
@@ -44,7 +44,7 @@ export const PlantAddModal = (props) => {
         }))
         plantListinfo = []
         for (let i = 0; i < newData.length; i++) {
-            plantListinfo.push({id: newData[i].plantNo, title: newData[i].plantName})
+            plantListinfo.push({key: newData[i].plantNo, value: newData[i].plantName})
         }
         setPlantList(plantListinfo)
     }
@@ -85,13 +85,13 @@ export const PlantAddModal = (props) => {
 
 
     function handlePress() {
-        if (selectedItem === null) {
+        const targetData = plantList.find(item => item.key === selected);
+        if (selected === "") {
           Alert.alert('식물 정보를 입력해주세요');
         } else {
             // 정보 등록
-
             setModalVisible2(!modalVisible2);
-            updateData(true,selectedItem.id,selectedItem.title);
+            updateData(true,targetData.key,targetData.value);
 
             Alert.alert('정보가 등록되었습니다.');
         }
@@ -101,16 +101,22 @@ export const PlantAddModal = (props) => {
         <View style={{marginHorizontal: 30}}>
             <Text style={{fontSize: 30, fontWeight: 'bold', marginTop: 50, alignItems: 'center',marginBottom: 30}}>나의 식물 정보 등록하기</Text>
             <Text style={{marginBottom: 10}}>등록할 식물을 선택하세요.</Text>
-            <AutocompleteDropdown
-                onSelectItem={setSelectedItem}
-                closeOnSubmit={false}
-                dataSet={plantList}
-            />
-            {/* <Button title="button" onPress={() => console.log(selectedItem)}/> */}
+            {plantList && plantList.length == 90 ?
+                <SelectList
+                    setSelected={(item) => setSelected(item)}
+                    data={plantList}
+                    arrowicon={<FontAwesome name="chevron-down" size={19.5} color={'black'} style={{marginTop: 7}} />} 
+                    searchicon={<FontAwesome name="search" size={17} color={'black'} style={{marginRight: 10}} />} 
+                    placeholder="원하는 식물을 선택하세요 :)"
+                    searchPlaceholder="식물 이름 검색"
+                    dropdownTextStyles={{fontSize: 18, marginVertical: 4}}
+                    boxStyles={{height: 65}}
+                    inputStyles={{marginBottom: 10, marginTop: 10,fontSize:18}}
+                />
+            : null}
             <View style={{alignItems: 'center', marginTop: 10}}>
                 <Button 
                     title="등록하기"
-                    //onPress={() => {setModalVisible2(!modalVisible2), updateData(true,selectedItem.id,selectedItem.title)}} 
                     onPress={handlePress}
                     titleStyle={{ 
                         fontWeight: 'bold',

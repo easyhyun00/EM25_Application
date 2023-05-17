@@ -39,7 +39,6 @@ export default function LoginPage() {
                 placeholder="이메일 ex) ???@em25.com"
                 value={email}
                 onChangeText={setEmail}
-                //autoCapitalize="none"
                 keyboardType="email-address"
             />
             <TextInput 

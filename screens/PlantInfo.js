@@ -1,11 +1,12 @@
 import { React, useState, useEffect } from 'react'
 import { useRoute } from '@react-navigation/native';
 import { Button, SpeedDial  } from '@rneui/base';
-import { View, Text, StyleSheet, Modal } from 'react-native';
-//import { ProgressCircle } from 'react-native-svg-charts';
+import * as Linking from 'expo-linking';
+import { View, Text, StyleSheet, Modal, Alert } from 'react-native';
+import { AntDesign } from '@expo/vector-icons'; 
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { FIREBASE_DB } from '../firebaseConfig';
-import { doc, getDoc,  onSnapshot } from 'firebase/firestore';
+import { doc, getDoc,  onSnapshot, updateDoc } from 'firebase/firestore';
 import { PlantInfoModal } from '../components/PlantInfoModal'
 import { PlantAddModal } from '../components/PlantAddModal'
 
@@ -13,42 +14,38 @@ export default function PlantInfo() {
 
     const route = useRoute();
 
-    const [plantInfo, setPlantInfo] = useState(false);
-    const [plantName, setPlantName] = useState('');
+    const [plantInfo, setPlantInfo] = useState(false); // DB에 해당 사용자가 식물을 등록했는지 true false
+    const [plantName, setPlantName] = useState(''); // 사용자가 등록한 식물 이름
     const [plantModal, setPlantModal] = useState('');
 
-    const [modalVisible, setModalVisible] = useState(false);
-    const [modalVisible2, setModalVisible2] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false); // 식물 정보 모달 열고 닫기
+    const [modalVisible2, setModalVisible2] = useState(false); // 식물 추가 모달 열고 닫기
 
-    const [humidity, setHumidity] = useState('')
-    const [temperature, setTemperature] = useState('')
-    const [light, setLight] = useState('')
+    const [humidity, setHumidity] = useState('') // 온실 습도
+    const [temperature, setTemperature] = useState('') // 온실 온도
+    const [light, setLight] = useState('') // 온실 조도
 
-    const [humidityInfo, setHumidityInfo] = useState(100)
-    const [temperHighInfo, setTemperHighInfo] = useState(100)
-    const [temperLowInfo, setTemperLowInfo] = useState('')
-    const [lightInfo, setLightInfo] = useState("????")
+    const [humidityInfo, setHumidityInfo] = useState(100) // 등록한 식물의 습도
+    const [temperHighInfo, setTemperHighInfo] = useState(100) // 등록한 식물의 최대 온도
+    const [temperLowInfo, setTemperLowInfo] = useState('') // 등록한 식물의 최소 온도
+    const [lightInfo, setLightInfo] = useState("????") // 등록한 식물의 조도
 
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(false); // SpeedDial(오른쪽 아래 동그란 거) 닫기 열기
 
-    // 데이터베이스 읽기
     useEffect(() => {
-        getData(route.params.uid)
-        getFarmInfo()
+        getData(route.params.uid) // 해당 사용자에 대해 정보 가져오기
+        getFarmInfo() // 온실에서 측정한 데이터 값 가져오기
     },[]);
 
     // 센서값 가져오기
     const getFarmInfo = () => {
-        onSnapshot(doc(FIREBASE_DB, "farminformation", "tem_hum"), (doc) => { // 온습도
-            setHumidity(doc.data().humidity);
-            setTemperature(doc.data().temperature);
+        onSnapshot(doc(FIREBASE_DB, "farminformation", "tem_hum"), (doc) => {
+            setHumidity(doc.data().humidity); // 습도
+            setTemperature(doc.data().temperature); // 온도
         });
-        onSnapshot(doc(FIREBASE_DB, "farminformation", "light"), (doc) => { // 조도
-            setLight(doc.data().light)
+        onSnapshot(doc(FIREBASE_DB, "farminformation", "light"), (doc) => {
+            setLight(doc.data().light) // 조도
         });
-        // setHumidity(30)
-        // setTemperature(25.1)
-        // setLight(700)
     }
 
     // 사용자 정보 가져오기
@@ -56,11 +53,12 @@ export default function PlantInfo() {
         const docRef = doc(FIREBASE_DB, "Users", uid)
         const docSnap = await getDoc(docRef);
 
+        // 해당 유저가 존재하면
         if (docSnap.exists()) {
-            setPlantInfo(docSnap.data().plantRegistration);
-            setPlantName(docSnap.data().plantName)
-            if(docSnap.data().plantName !== "") {
-                getPlantInfo(docSnap.data().plantNo)
+            setPlantInfo(docSnap.data().plantRegistration); // 식물 등록했는지 true false
+            setPlantName(docSnap.data().plantName) // 등록한 식물 이름
+            if(docSnap.data().plantName !== "") { // 식물을 등록했으면
+                getPlantInfo(docSnap.data().plantNo) // 등록한 식물 번호로 식물 정보 가져오기
             }
         }
     }
@@ -70,12 +68,12 @@ export default function PlantInfo() {
         const docRef = doc(FIREBASE_DB, "Plants", plantNo)
         const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
+        if (docSnap.exists()) { // 등록한 식물이 DB에 존재하면
             setPlantModal(docSnap.data());
-            setHumidityInfo(docSnap.data().plantHumidity)
-            setTemperHighInfo(docSnap.data().plantTemperatureHigh)
-            setTemperLowInfo(docSnap.data().plantTemperatureLow)
-            const lightinfo = docSnap.data().plantLight
+            setHumidityInfo(docSnap.data().plantHumidity) // 습도값
+            setTemperHighInfo(docSnap.data().plantTemperatureHigh) // 온도값
+            setTemperLowInfo(docSnap.data().plantTemperatureLow) // 온도값
+            const lightinfo = docSnap.data().plantLight // 조도값
             if (lightinfo == 1) {
                 setLightInfo(1500)
             } else if (lightinfo == 2) {
@@ -113,6 +111,18 @@ export default function PlantInfo() {
         </View> 
     )
 
+    // DB에 식물 정보 삭제
+    const deletePlantResgister = async () => {
+        setPlantInfo(false)
+        const washingtonRef = doc(FIREBASE_DB, "Users", route.params.uid);
+        await updateDoc(washingtonRef, {
+            plantRegistration: false,
+            plantNo:"",
+            plantName:"",
+        });
+
+    }
+
     // 메인
     return (
         <View style={styles.container}>
@@ -124,7 +134,7 @@ export default function PlantInfo() {
             <View>
                 <View style={{ flexDirection: 'row' }}>
                     <View style={styles.progressContainer}>
-                        <AnimatedCircularProgress
+                        <AnimatedCircularProgress // 온도 그래프
                             size={105}
                             width={12}
                             fill={plantInfo == false ? 0 : temperature*(100/40)}
@@ -156,7 +166,7 @@ export default function PlantInfo() {
                 </View>
                 <View style={{ flexDirection: 'row' }}>
                     <View style={styles.progressContainer}>
-                        <AnimatedCircularProgress
+                        <AnimatedCircularProgress // 습도 그래프
                             size={105}
                             width={12}
                             fill={plantInfo == false ? 0 : parseInt(humidity)}
@@ -200,7 +210,7 @@ export default function PlantInfo() {
                 </View>
                 <View style={{ flexDirection: 'row' }}>
                     <View style={styles.progressContainer}>
-                        <AnimatedCircularProgress
+                        <AnimatedCircularProgress // 조도 그래프
                             size={105}
                             width={12}
                             fill={plantInfo == false ? 0 : light/10}
@@ -253,27 +263,44 @@ export default function PlantInfo() {
                     }}
                 />
             </View>
-            {plantInfo ? 
                 <SpeedDial
                     isOpen={open}
-                    icon={{ name: 'edit', color: '#fff' }}
+                    icon={{ name: 'info', color: '#fff' }}
                     openIcon={{ name: 'close', color: '#fff' }}
                     onOpen={() => setOpen(!open)}
                     onClose={() => setOpen(!open)}
                     color='#F26A8B'>
                     <SpeedDial.Action
-                        icon={{ name: 'edit', color: '#fff' }}
-                        title="Edit"
-                        onPress={() => 
-                            {
-                                setPlantInfo(false);
-                                setModalVisible2(true);
-                                setOpen(!open) 
-                            }
-                        }
+                        icon={<AntDesign name="message1" size={21} color="#fff" />}
+                        title="1 : 1 문의"
+                        onPress={() => Linking.openURL("https://pf.kakao.com/_JXMxgxj")}
                     />
+                    {plantInfo == true ? 
+                    <View>
+                        <SpeedDial.Action
+                            icon={{ name: 'delete', color: '#fff',size: 22 }}
+                            title="식물 삭제"
+                            onPress={() => 
+                                Alert.alert('식물 삭제', '등록한 식물 정보를 삭제하시겠습니까?', [
+                                    {text: '아니오',onPress: () => setOpen(!open), style: 'cancel',},
+                                    {text: '네', onPress: () => {setOpen(!open), deletePlantResgister()}},
+                                ])
+                            }
+                        />
+                        <SpeedDial.Action
+                            icon={{ name: 'edit', color: '#fff',size: 22 }}
+                            title="식물 수정"
+                            onPress={() => 
+                                {
+                                    setPlantInfo(false);
+                                    setModalVisible2(true);
+                                    setOpen(!open) 
+                                }
+                            }
+                        /> 
+                    </View>
+                    : null}
                 </SpeedDial>
-            : null }
             <Modal
                     animationType="slide"
                     presentationStyle={"formSheet"}
