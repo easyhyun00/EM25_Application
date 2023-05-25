@@ -1,11 +1,16 @@
-import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, Image, ScrollView, TouchableHighlight, Modal, TouchableWithoutFeedback  } from 'react-native'
-import { FIREBASE_IMG } from '../firebaseConfig';
-import { ref, listAll, getDownloadURL, getMetadata  } from "firebase/storage";
+import React, { useState, useEffect, useRef } from 'react'
+import { View, Text, StyleSheet, Image, ScrollView, TouchableHighlight, Modal, ActivityIndicator, Alert } from 'react-native'
+import { FIREBASE_IMG, FIREBASE_DB } from '../firebaseConfig';
+import { ref, listAll, getDownloadURL, getMetadata } from "firebase/storage";
 import { Button } from 'react-native-elements';
-
+import { doc, getDoc } from 'firebase/firestore';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
+import { FontAwesome, Feather, Octicons } from '@expo/vector-icons';
 
 export default function PlantTimeLine(){
+
+    const scrollViewRef = useRef();
 
     const [timeAlign, setTimeAlign] = useState(true)
     const [imageUrlList, setImageUrlList] = useState([]);
@@ -15,9 +20,13 @@ export default function PlantTimeLine(){
     const [selectedImageDate, setSelectedImageDate] = useState(null);
     const [selectedImageKey, setSelectedImageKey] = useState(null);
 
+    const [yellowList, setYellowList] = useState([])
+
+    // 로딩화면
+    const [loading, setLoading] = useState(true);
+
     useEffect(()=>{
         const listRef  = ref(FIREBASE_IMG, 'camera_test_1/');
-        // imgList = []
 
         const fetchImg = async () => {
             try {
@@ -46,7 +55,14 @@ export default function PlantTimeLine(){
                 console.log(err)
             }
         }
-        fetchImg();
+
+        const getYellow = async () => {
+            const docRef = doc(FIREBASE_DB, "farminformation", "leaf")
+            const docSnap = await getDoc(docRef);
+            setYellowList(Object.keys(docSnap.data()))
+        };
+
+        Promise.all([fetchImg(), getYellow()]).then(() => setLoading(false));
     },[])
 
     const openModal = (uri,iTemDate,key) => {
@@ -75,33 +91,69 @@ export default function PlantTimeLine(){
         )
     }
 
+    const shareImage = async () => {
+        Alert.alert('식물 관리 시스템🪴', '이미지 공유 준비 중...', [
+            {text: 'OK'},
+        ]);
+        const localUri = `${FileSystem.documentDirectory}${selectedImageUri.split('/').pop()}`;
+
+        const { uri } = await FileSystem.downloadAsync(selectedImageUri, localUri);
+
+        if (!(await Sharing.isAvailableAsync())) {
+          alert(`이 기기에서는 이미지 공유를 사용할 수 없습니다.`);
+          return;
+        }
+        
+        await Sharing.shareAsync(uri);
+    }
+
     return (
         <View style={styles.container}>
             <View style={styles.container2}>
-                    <Text style={timeAlign == true ? styles.textOn : styles.textOff} onPress={()=>{setTimeAlign(true); setImageUrlList(imageUrlList.sort((a, b) => (a.key > b.key) ? -1 : 1))}}>최신 순으로</Text>
+                    <Text style={timeAlign == true ? styles.textOn : styles.textOff} onPress={()=>{setTimeAlign(true); setImageUrlList(imageUrlList.sort((a, b) => (a.key > b.key) ? -1 : 1)); scrollViewRef.current.scrollTo({x: 0, y: 0, animated: true});}}>최신 순으로</Text>
                     <Text>{"    "}</Text>
-                    <Text style={timeAlign == true ? styles.textOff : styles.textOn} onPress={()=>{setTimeAlign(false); setImageUrlList(imageUrlList.sort((a, b) => (a.key > b.key) ? 1 : -1))}}>오래된 순으로</Text>
+                    <Text style={timeAlign == true ? styles.textOff : styles.textOn} onPress={()=>{setTimeAlign(false); setImageUrlList(imageUrlList.sort((a, b) => (a.key > b.key) ? 1 : -1)); scrollViewRef.current.scrollTo({x: 0, y: 0, animated: true});}}>오래된 순으로</Text>
             </View>
-            <ScrollView contentContainerStyle={{ alignItems: 'center', marginHorizontal: 30 }}>
-                <View style={styles.container3}>
-                    {setImageUrlList ? imageUrlList.map(renderItem) : null}
-                </View>
-            </ScrollView>
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => {
-                    setModalVisible(!modalVisible);
-                }}>
-                {/* <TouchableWithoutFeedback onPress={() => setModalVisible(false)}> */}
+            {loading ?
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 40 }}>
+                <ActivityIndicator size="large" color="green" />
+                <Text style={{fontSize: 20}}>나의 식물 사진 가져오는 중 . . .</Text>
+            </View> :
+            <>
+                <ScrollView ref={scrollViewRef} contentContainerStyle={{ alignItems: 'center', marginHorizontal: 30 }}>
+                    <View style={styles.container3}>
+                        {setImageUrlList ? imageUrlList.map(renderItem) : null}
+                    </View>
+                </ScrollView>
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={modalVisible}
+                    onRequestClose={() => {
+                        setModalVisible(!modalVisible);
+                    }}>
                     <View style={styles.centeredView}>
                     <View style={styles.modalView}>
                         <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Text style={{fontSize: 20,marginBottom: 7,marginLeft: 5,fontWeight:"bold",color:"green", marginRight: 15}}># {selectedImageKey}</Text>
                             <Text style={styles.dateText}>{selectedImageDate}</Text>
-                            <Text style={{fontSize: 18,marginBottom: 7,marginRight: 5}}>{selectedImageKey} 주차</Text>
+                            <Octicons
+                                name="share"
+                                size={20}
+                                color="green"
+                                onPress={shareImage}
+                                style={{marginBottom: 7, marginRight: 7}}
+                            />
                         </View>
                         <Image source={{uri: selectedImageUri}} style={styles.modalImage} />
+                        {selectedImageUri ? yellowList.includes(selectedImageUri.split("F")[1].split("?")[0]) ? 
+                            <Text style={{marginTop: 7}}>    
+                                <Text style={{fontSize: 17, marginTop: 7}}>지난 주에 비해</Text> 
+                                <Text style={{fontSize: 19, marginTop: 7, color: "#BDDC1C", fontWeight: 'bold'}}> 노란 잎</Text>
+                                <Text style={{fontSize: 17, marginTop: 7}}> 비율이 증가하였습니다😥</Text>
+                            </Text>
+                            : null : null
+                        }
                         <Button 
                             title="닫기"
                             titleStyle={{ 
@@ -122,8 +174,9 @@ export default function PlantTimeLine(){
                         />
                     </View>
                     </View>
-                {/* </TouchableWithoutFeedback> */}
-            </Modal>
+                </Modal>
+            </>
+            }
         </View>
     )
 }
