@@ -1,14 +1,16 @@
 import React, { useState, useEffect }  from 'react'
-import {View,Text,StyleSheet} from 'react-native'
+import {View,Text,StyleSheet,ScrollView, ActivityIndicator  } from 'react-native'
 import { useRoute } from '@react-navigation/native';
-import YoutubePlayer from "react-native-youtube-iframe";
 import { FIREBASE_DB } from '../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
+import { WebView } from 'react-native-webview';
 
 export default function PlantLive(){
 
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [plantName, setPlantName] = useState("")
+
+  const [loading, setloading] = useState(true);
 
   const route = useRoute();
 
@@ -30,6 +32,8 @@ export default function PlantLive(){
       console.log(docSnap.data().plantName)
       setPlantName(docSnap.data().plantName)
     }
+
+    setloading(false)
   }
 
   const year = currentDateTime.getFullYear();
@@ -41,17 +45,25 @@ export default function PlantLive(){
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🎥 실시간 LIVE</Text>
-      <YoutubePlayer
-        height={300}
-        play={true}
-        width={350}
-        quality="2160p"
-        videoId={"8xHUdfaNtbw"}
-      />
-      <Text style={styles.name}>{plantName ? "🌱 " + plantName + " 🌱" : "식물 정보가 없습니다."}</Text>
-      <Text style={styles.time}>{`${year}년 ${month}월 ${day}일`}</Text>
-      <Text style={styles.time2}>{`${hour}시 ${minute}분 ${second}초`}</Text>
+      {loading ? 
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 40 }}>
+          <ActivityIndicator size="large" color="green" />
+          <Text style={{fontSize: 20}}>실시간 영상 불러오는 중 . . .</Text>
+        </View> :
+        <>
+          <Text style={styles.title}>🎥 실시간 LIVE</Text>
+          <View style={{ height: 240, marginBottom: 100 }}>
+            <WebView
+              source={{ uri: 'http://192.168.137.211:8000/index.html' }}
+              style={{ width: 320 }}
+              scalesPageToFit={true}
+            />
+          </View>
+          <Text style={styles.name}>{plantName ? "🌱 " + plantName + " 🌱" : "식물 정보가 없습니다."}</Text>
+          <Text style={styles.time}>{`${year}년 ${month}월 ${day}일`}</Text>
+          <Text style={styles.time2}>{`${hour}시 ${minute}분 ${second}초`}</Text>
+        </>  
+      }
     </View>
   ) 
 }
