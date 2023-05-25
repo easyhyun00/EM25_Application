@@ -4,10 +4,29 @@ import Navigation from "./navigation";
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
+import { FIREBASE_DB } from './firebaseConfig';
+import { doc, getDoc,  onSnapshot, updateDoc } from 'firebase/firestore';
+
 export default function App() {
 
+  //// 알림 권한 설정
+  // useEffect(() => {
+  //   Notifications.getPermissionsAsync()
+  //     .then((status) => {
+  //       if (status.status !== 'granted') {
+  //         return Notifications.requestPermissionsAsync();
+  //       }
+  //     })
+  //     .then((status) => {
+  //       if (status.status !== 'granted') {
+  //         alert('No notification permissions!');
+  //         return;
+  //       }
+  //     });
+  // }, []);
+
   useEffect(() => {
-    console.log("======>")
+
     // 푸시 알림 채널 설정
     if (Platform.OS === 'android') {
       Notifications.setNotificationChannelAsync('default', {
@@ -18,43 +37,45 @@ export default function App() {
       });
     }
 
-    // 오전 7시 00분에 푸시 알림 스케줄링
-    const trigger = {
-      hour: 14,
-      minute: 0,
-      repeats: true,
-    };
+    // 물을 3번 줬을 때, 급수통 채워달라고 푸시 알림
+    onSnapshot(doc(FIREBASE_DB, "farminformation", "push"), (doc) => {
+      const water = doc.data().water
+      if (water === 3) {
+        console.log("물 알림")
+        Notifications.scheduleNotificationAsync({
+          content: {
+            title: '식물 관리 시스템 🪴',
+            body: '💧 급수통의 물을 채워주세요!',
+          },
+          trigger: null,
+        });
+      }
+    });
 
-    Notifications.scheduleNotificationAsync({
-      content: {
-        title: '식물 관리 시스템 🪴',
-        body: '지난주와 달라진 식물을 확인하세요:)',
-      },
-      trigger,
+    // 사진이 업데이트 되었을 때, 푸시 알림 옴
+    onSnapshot(doc(FIREBASE_DB, "farminformation", "push1"), (doc) => {
+      console.log("사진 알림")
+      Notifications.scheduleNotificationAsync({
+        content: {
+          title: '식물 관리 시스템 🪴',
+          body: '📸 새로 추가된 사진을 확인하세요!',
+        },
+        trigger: null,
+      });
     });
 
     // 알림 핸들러 설정
     Notifications.setNotificationHandler({
       handleNotification: async () => {
-        const today = new Date();
-        const dayOfWeek = today.getDay(); // 0 (일요일) through 6 (토요일)
-        if (dayOfWeek === 2) { // 금요일
-          return {
-            shouldShowAlert: true,
-            shouldPlaySound: true,
-            shouldSetBadge: false,
-          };
-        } else {
-          return {
-            shouldShowAlert: false,
-            shouldPlaySound: false,
-            shouldSetBadge: false,
-          };
-        }
+        return {
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+        };
       },
     });
 
-  }, []);
+  },[]);
 
   return (
     <Navigation />
