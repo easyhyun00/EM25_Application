@@ -73,7 +73,7 @@ const parseXMLAndSaveToFirestore = async () => {
                             var plantWater = result.response.body[0].item[0].watercycleSummerCodeNm[0]
                             if (plantWater == "") {
 
-                            } else {
+                            } else { // 토양 수분
                                 if (plantWater === "항상 흙을 축축하게 유지함(물에 잠김)"){
                                     plantWater = "1"
                                 }

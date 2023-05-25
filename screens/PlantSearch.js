@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { FIREBASE_DB } from '../firebaseConfig';
 import * as Linking from 'expo-linking';
 import { collection, getDocs, query } from 'firebase/firestore';
 
 export default function PlantSearch() {
+
   const PAGE_SIZE = 6; // 한 페이지에 보여줄 항목의 개수
   const [plantList, setPlantList] = useState([]); // 전체 식물 목록
   const [page, setPage] = useState(1); // 현재 페이지 번호
   const [timeAlign, setTimeAlign] = useState(true)
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getPlant();
@@ -31,6 +34,7 @@ export default function PlantSearch() {
     plantListinfo.sort((a, b) => (a.title > b.title) ? 1 : -1)
 
     setPlantList(plantListinfo);
+    setLoading(false);
   };
 
   const link = (id) => {
@@ -60,50 +64,57 @@ export default function PlantSearch() {
 
     return (
       <View style={styles.paging}>
-        <TouchableOpacity
-          onPress={() => setPage((prev) => Math.max(prev - 1, 1))}
-          disabled={page === 1}
-        >
-          <Text style={styles.pagingButton}>{'◀'}</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={page === 1}
+            >
+              <Text style={styles.pagingButton}>{'◀'}</Text>
+            </TouchableOpacity>
+            {pages.slice(start, end).map((p) => (
+              <TouchableOpacity
+                key={p + 1}
+                onPress={() => setPage(p + 1)}
+                style={styles.pagingButton}
+              >
+                <Text style={{fontSize: 30, fontWeight: page === p + 1 ? 'bold' : '200', color: page === p + 1 ? 'green' : 'black' }}>{p + 1}</Text>
+              </TouchableOpacity>
+            ))}
 
-        {pages.slice(start, end).map((p) => (
-          <TouchableOpacity
-            key={p + 1}
-            onPress={() => setPage(p + 1)}
-            style={styles.pagingButton}
-          >
-            <Text style={{fontSize: 30, fontWeight: page === p + 1 ? 'bold' : '200', color: page === p + 1 ? 'green' : 'black' }}>{p + 1}</Text>
-          </TouchableOpacity>
-        ))}
-
-        <TouchableOpacity
-          onPress={() =>
-            setPage((prev) => Math.min(prev + 1, totalPages))
-          }
-          disabled={page === totalPages}
-        >
-          <Text style={styles.pagingButton}>{'▶'}</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                setPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={page === totalPages}
+            >
+              <Text style={styles.pagingButton}>{'▶'}</Text>
+            </TouchableOpacity>
       </View>
     );
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.container2}>
-        <Text style={timeAlign == true ? styles.textOn : styles.textOff} onPress={()=>{setTimeAlign(true); setPlantList(plantList.sort((a, b) => (a.title > b.title) ? 1 : -1))}}>이름 순 ⬇</Text>
-        <Text>{"    "}</Text>
-        <Text style={timeAlign == true ? styles.textOff : styles.textOn} onPress={()=>{setTimeAlign(false); setPlantList(plantList.sort((a, b) => (a.title > b.title) ? -1 : 1))}}>이름 순 ⬆</Text>
-      </View>
-      <View>
-        <FlatList
-          data={plantList.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)} // 현재 페이지의 데이터만 보여줌
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-        />
-      </View>
-      {renderPagingButtons()}
+      {loading ? 
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 40 }}>
+          <ActivityIndicator size="large" color="green" />
+          <Text style={{fontSize: 20}}>다른 식물 정보 가져오는 중 . . .</Text>
+        </View> :
+        <>
+          <View style={styles.container2}>
+            <Text style={timeAlign == true ? styles.textOn : styles.textOff} onPress={()=>{setTimeAlign(true); setPlantList(plantList.sort((a, b) => (a.title > b.title) ? 1 : -1))}}>이름 순 ⬇</Text>
+            <Text>{"    "}</Text>
+            <Text style={timeAlign == true ? styles.textOff : styles.textOn} onPress={()=>{setTimeAlign(false); setPlantList(plantList.sort((a, b) => (a.title > b.title) ? -1 : 1))}}>이름 순 ⬆</Text>
+          </View>
+          <View>
+            <FlatList
+              data={plantList.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)} // 현재 페이지의 데이터만 보여줌
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id}
+            />
+          </View>
+          {renderPagingButtons()}
+        </>
+      }
     </View>
   );
 }

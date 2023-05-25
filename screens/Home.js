@@ -79,7 +79,7 @@ const renderItem=(item, index) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.textStyle}>식물 관리 서비스 🪴</Text>
+      <Text style={styles.textStyle}>식물 관리 시스템 🪴</Text>
       {<CustomInfo />}
       {data.map(renderItem)}
     </View>

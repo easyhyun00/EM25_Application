@@ -2,7 +2,7 @@ import { React, useState, useEffect } from 'react'
 import { useRoute } from '@react-navigation/native';
 import { Button, SpeedDial  } from '@rneui/base';
 import * as Linking from 'expo-linking';
-import { View, Text, StyleSheet, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, Modal, Alert, ActivityIndicator } from 'react-native';
 import { AntDesign } from '@expo/vector-icons'; 
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { FIREBASE_DB } from '../firebaseConfig';
@@ -32,9 +32,12 @@ export default function PlantInfo() {
 
     const [open, setOpen] = useState(false); // SpeedDial(오른쪽 아래 동그란 거) 닫기 열기
 
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
-        getData(route.params.uid) // 해당 사용자에 대해 정보 가져오기
-        getFarmInfo() // 온실에서 측정한 데이터 값 가져오기
+        Promise.all([getData(route.params.uid), getFarmInfo()]).then(() => setLoading(false));
+        // 해당 사용자에 대해 정보 가져오기
+        // 온실에서 측정한 데이터 값 가져오기
     },[]);
 
     // 센서값 가져오기
@@ -126,6 +129,12 @@ export default function PlantInfo() {
     // 메인
     return (
         <View style={styles.container}>
+            {loading ? 
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginBottom: 40 }}>
+                <ActivityIndicator size="large" color="green" />
+                <Text style={{fontSize: 20}}>나의 식물 정보 가져오는 중 . . .</Text>
+            </View> : 
+            <>
             <View>
                 <Text style={styles.plantName}>
                     {plantInfo == false ? "식물 정보가 없습니다." : "🪴 " + plantName + " 🪴"}
@@ -311,6 +320,8 @@ export default function PlantInfo() {
                         {ModalInfo}
                     </View>
             </Modal>
+            </>
+            }
         </View>
     )
 }
