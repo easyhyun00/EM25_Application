@@ -21,14 +21,16 @@ export default function PlantInfo() {
     const [modalVisible, setModalVisible] = useState(false); // 식물 정보 모달 열고 닫기
     const [modalVisible2, setModalVisible2] = useState(false); // 식물 추가 모달 열고 닫기
 
-    const [humidity, setHumidity] = useState('') // 온실 습도
+    //const [humidity, setHumidity] = useState('') // 온실 습도
     const [temperature, setTemperature] = useState('') // 온실 온도
     const [light, setLight] = useState('') // 온실 조도
+    const [soilWater, setSoilWater] = useState('') // 온실 토양 수분
 
     const [humidityInfo, setHumidityInfo] = useState(100) // 등록한 식물의 습도
     const [temperHighInfo, setTemperHighInfo] = useState(100) // 등록한 식물의 최대 온도
     const [temperLowInfo, setTemperLowInfo] = useState('') // 등록한 식물의 최소 온도
     const [lightInfo, setLightInfo] = useState("????") // 등록한 식물의 조도
+    const [soilWaterInfo, setSoilWaterInfo] = useState('') // 등록한 식물의 물주기
 
     const [open, setOpen] = useState(false); // SpeedDial(오른쪽 아래 동그란 거) 닫기 열기
 
@@ -43,11 +45,14 @@ export default function PlantInfo() {
     // 센서값 가져오기
     const getFarmInfo = () => {
         onSnapshot(doc(FIREBASE_DB, "farminformation", "tem_hum"), (doc) => {
-            setHumidity(doc.data().humidity); // 습도
+            //setHumidity(doc.data().humidity); // 습도
             setTemperature(doc.data().temperature); // 온도
         });
         onSnapshot(doc(FIREBASE_DB, "farminformation", "light"), (doc) => {
             setLight(doc.data().light) // 조도
+        });
+        onSnapshot(doc(FIREBASE_DB, "farminformation", "soil_water"), (doc) => {
+            setSoilWater(doc.data().soil_water_percent) // 토양 수분
         });
     }
 
@@ -73,6 +78,7 @@ export default function PlantInfo() {
 
         if (docSnap.exists()) { // 등록한 식물이 DB에 존재하면
             setPlantModal(docSnap.data());
+            setSoilWaterInfo(docSnap.data().plantWater) // 토양 수분 값
             setHumidityInfo(docSnap.data().plantHumidity) // 습도값
             setTemperHighInfo(docSnap.data().plantTemperatureHigh) // 온도값
             setTemperLowInfo(docSnap.data().plantTemperatureLow) // 온도값
@@ -107,9 +113,11 @@ export default function PlantInfo() {
                 }}
             >
             </Button>
-            {plantInfo == false ? <PlantAddModal 
-            modalVisible2={modalVisible2} setModalVisible2={setModalVisible2} setPlantInfo={setPlantInfo} userUid={route.params.uid} setPlantName={setPlantName}
-            setPlantModal={setPlantModal} setHumidityInfo={setHumidityInfo} setTemperHighInfo={setTemperHighInfo} setTemperLowInfo={setTemperLowInfo} setLightInfo={setLightInfo} /> 
+            {plantInfo == false ? 
+            <PlantAddModal 
+                modalVisible2={modalVisible2} setModalVisible2={setModalVisible2} setPlantInfo={setPlantInfo} userUid={route.params.uid} setPlantName={setPlantName}
+                setPlantModal={setPlantModal} setHumidityInfo={setHumidityInfo} setTemperHighInfo={setTemperHighInfo} setTemperLowInfo={setTemperLowInfo} setLightInfo={setLightInfo} 
+            /> 
             : <PlantInfoModal plantModal={plantModal} />}
         </View> 
     )
@@ -177,45 +185,48 @@ export default function PlantInfo() {
                 </View>
                 <View style={{ flexDirection: 'row' }}>
                     <View style={styles.progressContainer}>
-                        <AnimatedCircularProgress // 습도 그래프
+                        <AnimatedCircularProgress // 토양 수분 그래프
                             size={105}
                             width={12}
-                            fill={plantInfo == false ? 0 : parseInt(humidity)}
+                            fill={plantInfo == false ? 0 : parseInt(soilWater)}
                             rotation={0}
                             tintColor={
-                                humidityInfo === '70% 이상'
-                                  ? humidity >= 70
-                                    ? '#52E020'
-                                    : '#278BFF'
-                                  : humidity >= 40 && humidity <= 70
-                                  ? '#52E020'
-                                  : humidity < 40
-                                  ? '#278BFF'
-                                  : '#F54040'
+                                plantModal.plantWater === "1"
+                                ? soilWater >= 55 ? '#52E020' : '#278BFF'
+                                : plantModal.plantWater === "2"
+                                ? soilWater >= 55 ? '#F54040' : (soilWater >= 30 ? '#52E020' : '#278BFF')
+                                : plantModal.plantWater === "3"
+                                ? soilWater >= 30 ? '#F54040' : (soilWater >= 20 ? '#52E020' : '#278BFF')
+                                : plantModal.plantWater === "4"
+                                ? soilWater >= 20 ? '#F54040' : '#52E020'
+                                : '#278BFF'
                             }
                             backgroundColor="#D9D9D9">
                         </AnimatedCircularProgress>
                         <View style={styles.textContainer}>
-                            <Text style={styles.temperatureText}>습도</Text>
-                            <Text style={styles.temperatureValue}>{plantInfo == false ? 0 : humidity} %</Text>
+                            <Text style={styles.temperatureText}>토양수분</Text>
+                            <Text style={styles.temperatureValue}>{plantInfo == false ? 0 : soilWater} %</Text>
                         </View>
                     </View> 
                     <View style={styles.infoContainer}>   
                         {
-                            plantInfo == false ? <Text style={styles.infoText1}>습도 없음 </Text> :
-                            humidityInfo === '70% 이상'
-                            ? humidity >= 70
-                                ? <Text style={styles.infoText1}>만족</Text>
-                                : <Text style={styles.infoText1Blue}>습도 낮음</Text>
-                            : humidity >= 40 && humidity <= 70
-                            ? <Text style={styles.infoText1}>만족</Text>
-                            : humidity < 40
-                            ? <Text style={styles.infoText1Blue}>습도 낮음</Text>
-                            : <Text style={styles.infoText1Red}>습도 높음</Text>
+                            plantInfo == false ? <Text style={styles.infoText1}>토양수분 없음 </Text> :
+                            plantModal.plantWater === "1"
+                                ? soilWater >= 55 ? <Text style={styles.infoText1}>만족</Text> : <Text style={styles.infoText1Blue}>토양수분 낮음</Text>
+                                : plantModal.plantWater === "2"
+                                ? soilWater >= 55 ? <Text style={styles.infoText1Red}>토양수분 높음</Text> : (soilWater >= 30 ? <Text style={styles.infoText1}>만족</Text> : <Text style={styles.infoText1Blue}>토양수분 낮음</Text>)
+                                : plantModal.plantWater === "3"
+                                ? soilWater >= 30 ? <Text style={styles.infoText1Red}>토양수분 높음</Text> : (soilWater >= 20 ? <Text style={styles.infoText1}>만족</Text> : <Text style={styles.infoText1Blue}>토양수분 낮음</Text>)
+                                : plantModal.plantWater === "4"
+                                ? soilWater >= 20 ? <Text style={styles.infoText1Red}>토양수분 높음</Text> : <Text style={styles.infoText1}>만족</Text>
+                                : <Text style={styles.infoText1Blue}>토양수분 낮음</Text>
                         }
                         {
                             plantInfo == false ? <Text style={styles.infoText2}>식물 정보을 등록하세요 !!</Text> :
-                            <Text style={styles.infoText2}>적정 습도 {humidityInfo}</Text>
+                            <>
+                                <Text style={styles.infoText2}>적정 토양수분 {plantModal.plantWater == "1" ? "55~100%" : plantModal.plantWater == "2" ? "30~55%" : plantModal.plantWater == "3" ? "20~30%" : "0~20%"} </Text> 
+                            </>
+
                         }
                     </View>
                 </View>

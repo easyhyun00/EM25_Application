@@ -33,6 +33,14 @@ export const PlantInfoModal = (props) => {
                         "낮은, 중간, 높은 광도 (300~10,000 Lux)" }
                     </Text>
                 </View>
+                <View style={{ flexDirection: 'row',marginHorizontal: 35,lineHeight: 30, alignSelf: 'flex-start',marginBottom: 10}}>
+                    <Text style={{ fontSize: 18,fontWeight: 'bold' }}>토양수분   </Text>
+                    <Text style={{ fontSize: 18 }}>
+                        {plantModal.plantWater == 1 ? "55% ~ 100%" :
+                        plantModal.plantWater == 2 ? "30% ~ 55%" : 
+                        plantModal.plantWater == 3 ? "20% ~ 30%" : "0% ~ 20%"}
+                    </Text>
+                </View>
         </View>
     )
 }

@@ -29,7 +29,6 @@ export default function PlantLive(){
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      console.log(docSnap.data().plantName)
       setPlantName(docSnap.data().plantName)
     }
 
