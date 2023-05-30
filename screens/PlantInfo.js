@@ -136,9 +136,11 @@ export default function PlantInfo() {
             </View> : 
             <>
             <View>
-                <Text style={styles.plantName}>
-                    {plantInfo == false ? "식물 정보가 없습니다." : "🪴 " + plantName + " 🪴"}
-                </Text>
+                {plantInfo == false ? 
+                    <Text style={styles.plantName}>식물 정보가 없습니다.</Text> : plantName.length > 10 ? 
+                    <Text style={styles.plantNameSmall}>🪴 {plantName} 🪴</Text>:  
+                    <Text style={styles.plantName}>🪴 {plantName} 🪴</Text>
+                }
             </View>
             <View>
                 <View style={{ flexDirection: 'row' }}>
@@ -335,6 +337,12 @@ const styles = StyleSheet.create({
     },
     plantName: {
         fontSize: 40,
+        fontWeight: 'bold',
+        marginBottom: 20,
+        marginTop: -25,
+    },
+    plantNameSmall: {
+        fontSize: 25,
         fontWeight: 'bold',
         marginBottom: 20,
         marginTop: -25,

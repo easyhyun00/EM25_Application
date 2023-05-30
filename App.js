@@ -37,10 +37,10 @@ export default function App() {
       });
     }
 
-    // 물을 3번 줬을 때, 급수통 채워달라고 푸시 알림
+    // 물을 5번 줬을 때, 급수통 채워달라고 푸시 알림
     onSnapshot(doc(FIREBASE_DB, "farminformation", "push"), (doc) => {
       const water = doc.data().water
-      if (water === 3) {
+      if (water === 5) {
         console.log("물 알림")
         Notifications.scheduleNotificationAsync({
           content: {
@@ -52,13 +52,13 @@ export default function App() {
       }
     });
 
-    // 사진이 업데이트 되었을 때, 푸시 알림 옴
-    onSnapshot(doc(FIREBASE_DB, "farminformation", "push1"), (doc) => {
-      console.log("사진 알림")
+    // 시든 잎 감지 되었을 때, 푸시 알림
+    onSnapshot(doc(FIREBASE_DB, "farminformation", "leaf"), (doc) => {
+      console.log("시든 잎 알림")
       Notifications.scheduleNotificationAsync({
         content: {
           title: '식물 관리 시스템 🪴',
-          body: '📸 새로 추가된 사진을 확인하세요!',
+          body: '📸 시든 잎이 감지되었습니다!',
         },
         trigger: null,
       });

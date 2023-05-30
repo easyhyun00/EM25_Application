@@ -6,7 +6,7 @@ import { Button } from 'react-native-elements';
 import { doc, getDoc } from 'firebase/firestore';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
-import { FontAwesome, Feather, Octicons } from '@expo/vector-icons';
+import { Octicons } from '@expo/vector-icons';
 
 export default function PlantTimeLine(){
 
@@ -146,7 +146,7 @@ export default function PlantTimeLine(){
                             />
                         </View>
                         <Image source={{uri: selectedImageUri}} style={styles.modalImage} />
-                        {selectedImageUri ? yellowList.includes(selectedImageUri.split("F")[1].split("?")[0]) ? 
+                        {selectedImageUri ? yellowList.includes(selectedImageUri.split("F")[1].split(".")[0]) ? 
                             <Text style={{marginTop: 7}}>    
                                 <Text style={{fontSize: 17, marginTop: 7}}>지난 주에 비해</Text> 
                                 <Text style={{fontSize: 19, marginTop: 7, color: "#BDDC1C", fontWeight: 'bold'}}> 노란 잎</Text>

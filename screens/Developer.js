@@ -53,7 +53,7 @@ const Item = ({ name, email, image,no }) => (
 
 const styles = StyleSheet.create({
     container: {
-      flex: 1, // 비율
+      flex: 1,
       backgroundColor: '#EDEFE3',
       alignItems: 'center',
       justifyContent: 'center',

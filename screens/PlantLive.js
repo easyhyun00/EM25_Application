@@ -1,5 +1,5 @@
 import React, { useState, useEffect }  from 'react'
-import {View,Text,StyleSheet,ScrollView, ActivityIndicator  } from 'react-native'
+import {View,Text,StyleSheet, ActivityIndicator  } from 'react-native'
 import { useRoute } from '@react-navigation/native';
 import { FIREBASE_DB } from '../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
