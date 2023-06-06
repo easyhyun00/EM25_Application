@@ -94,5 +94,5 @@
 <img src="https://github.com/easyhyun00/EM25_Application/assets/98106371/339f5116-5e12-46c4-8786-f69ce3a4ac88.png"  width="200" height="450"/>
 
 ## 📹 전체 시연 동영상
-<p align="center"><img src="https://github.com/easyhyun00/EM25_Application/assets/98106371/3b1e2496-48f6-497c-a314-1d6cd6da266e.png"  width="150" height="150"/></p>
+[<p align="center"><img src="https://github.com/easyhyun00/EM25_Application/assets/98106371/3b1e2496-48f6-497c-a314-1d6cd6da266e.png"  width="150" height="150"/></p>](https://youtu.be/KoYX0IlZeY8)
 
