@@ -5,9 +5,11 @@
 
 ## ✏️ 프로젝트 소개
 
-- 라즈베리파이와 연동되는 식물 관리 시스템의 어플리케이션 => [라즈베리파이 깃허브](https://github.com/easyhyun00/EM25_RaspberryPi)
+- 라즈베리파이와 연동되는 식물 관리 시스템의 어플리케이션 [(라즈베리파이 깃허브)](https://github.com/easyhyun00/EM25_RaspberryPi)
 
 - 선택한 식물의 온도, 토양수분, 광도, 정보, 실시간, 타임라인 등 정보를 얻을 수 있는 어플리케이션
+
+- [실내정원용 식물 OPEN API](https://www.nongsaro.go.kr/portal/ps/psn/psnj/openApiLst.ps?menuId=PS65428&pageIndex=1&pageSize=&sLclasCode=&sText=%EC%8B%A4%EB%82%B4%EC%A0%95%EC%9B%90%EC%9A%A9+%EC%8B%9D%EB%AC%BC)를 활용하여 각 식물별 생육 환경 지정 
 
 - Expo(React Native)를 사용하여 안드로이드, IOS 모두 실행 가능한 어플리케이션
 
