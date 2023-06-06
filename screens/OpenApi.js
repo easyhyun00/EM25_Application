@@ -3,10 +3,11 @@ import { parseString } from 'react-native-xml2js';
 import { FIREBASE_DB } from '../firebaseConfig';
 import { setDoc, doc } from 'firebase/firestore';
 import { View, Button } from 'react-native';
+import apiKey from "../openApiKey";
 
 // OpenAPI 요청을 보낼 URL
-const openAPIUrl = 'http://api.nongsaro.go.kr/service/garden/gardenList?apiKey=20230307TZHBL77P7AHNDPB2Q&numOfRows=217';
-const openAPIUrl2 = 'http://api.nongsaro.go.kr/service/garden/gardenDtl?apiKey=20230307TZHBL77P7AHNDPB2Q&cntntsNo=';
+const openAPIUrl = `http://api.nongsaro.go.kr/service/garden/gardenList?apiKey=${apiKey}&numOfRows=217`;
+const openAPIUrl2 = `http://api.nongsaro.go.kr/service/garden/gardenDtl?apiKey=${apiKey}&cntntsNo=`;
 
 const addDB = async (no,name,imageUrl,info,temperHigh,temperLow,humidity,light,plantWater) => { // 데이터 쓰기
     const data = {
