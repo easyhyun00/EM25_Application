@@ -41,7 +41,6 @@ export default function App() {
     onSnapshot(doc(FIREBASE_DB, "farminformation", "push"), (doc) => {
       const water = doc.data().water
       if (water === 5) {
-        console.log("물 알림")
         Notifications.scheduleNotificationAsync({
           content: {
             title: '식물 관리 시스템 🪴',
@@ -54,7 +53,6 @@ export default function App() {
 
     // 시든 잎 감지 되었을 때, 푸시 알림
     onSnapshot(doc(FIREBASE_DB, "farminformation", "leaf"), (doc) => {
-      console.log("시든 잎 알림")
       Notifications.scheduleNotificationAsync({
         content: {
           title: '식물 관리 시스템 🪴',
