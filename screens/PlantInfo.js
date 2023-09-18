@@ -178,7 +178,7 @@ export default function PlantInfo() {
                             <Text style={styles.infoText1}>만족 </Text>
                         }  
                         {
-                            plantInfo == false ? <Text style={styles.infoText2}>식물 정보을 등록하세요 !!</Text> : 
+                            plantInfo == false ? <Text style={styles.infoText2}>식물 정보를 등록하세요 !!</Text> : 
                             <Text style={styles.infoText2}>적정 온도 {temperLowInfo} ~ {temperHighInfo} ℃</Text>
                         }                      
                     </View>
@@ -222,7 +222,7 @@ export default function PlantInfo() {
                                 : <Text style={styles.infoText1Blue}>토양수분 낮음</Text>
                         }
                         {
-                            plantInfo == false ? <Text style={styles.infoText2}>식물 정보을 등록하세요 !!</Text> :
+                            plantInfo == false ? <Text style={styles.infoText2}>식물 정보를 등록하세요 !!</Text> :
                             <>
                                 <Text style={styles.infoText2}>적정 토양수분 {plantModal.plantWater == "1" ? "55~100%" : plantModal.plantWater == "2" ? "30~55%" : plantModal.plantWater == "3" ? "20~30%" : "0~20%"} </Text> 
                             </>
@@ -252,7 +252,7 @@ export default function PlantInfo() {
                             <Text style={styles.infoText1Blue}>광도 낮음</Text>
                         }
                         {
-                            plantInfo == false ? <Text style={styles.infoText2}>식물 정보을 등록하세요 !!</Text> :
+                            plantInfo == false ? <Text style={styles.infoText2}>식물 정보를 등록하세요 !!</Text> :
                             <Text style={styles.infoText2}>적정 광도 {lightInfo} LUX 이상</Text>
                         }
                     </View>

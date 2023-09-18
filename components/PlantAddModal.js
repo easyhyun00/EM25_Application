@@ -33,8 +33,6 @@ export const PlantAddModal = (props) => {
     }, []);
 
     const getPlant = async () => {
-        console.log("userEffect")
-
         const usersCollectionRef = collection(FIREBASE_DB, "Plants");
 
         const qry = await query(usersCollectionRef);

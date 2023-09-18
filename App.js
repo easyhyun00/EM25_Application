@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import Navigation from "./navigation";
 
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
 import { FIREBASE_DB } from './firebaseConfig';
-import { doc, getDoc,  onSnapshot, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function App() {
 
