@@ -23,7 +23,7 @@ const data = [
     {
       id: '1',
       name: '201901762 이지현',
-      email: '2455jh@naver.com',
+      email: 'leejihyun0324@gmail.com',
       image: "https://firebasestorage.googleapis.com/v0/b/em25-c1a70.appspot.com/o/image%2F%EC%82%AC%EB%9E%8C2.png?alt=media&token=2e5c85e0-b3f9-46da-8c59-9c1e957313e5",
     },
     {
