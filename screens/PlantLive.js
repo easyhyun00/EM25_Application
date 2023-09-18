@@ -53,7 +53,7 @@ export default function PlantLive(){
           <Text style={styles.title}>🎥 실시간 LIVE</Text>
           <View style={{ height: 240, marginBottom: 100 }}>
             <WebView
-              source={{ uri: 'http://192.168.137.211:8000/index.html' }}
+              source={{ uri: 'http://192.168.137.88:8000/index.html' }}
               style={{ width: 320 }}
               scalesPageToFit={true}
             />

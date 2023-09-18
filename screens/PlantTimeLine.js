@@ -48,6 +48,7 @@ export default function PlantTimeLine(){
                       key: index + 1
                     };
                 });
+                console.log(newDataList[0].url.split("F")[1].split("?")[0])
                 newDataList.sort((a, b) => (a.key > b.key) ? -1 : 1) // 오름차순 1 : -1
                 setImageUrlList(newDataList)
 
@@ -59,6 +60,7 @@ export default function PlantTimeLine(){
         const getYellow = async () => {
             const docRef = doc(FIREBASE_DB, "farminformation", "leaf")
             const docSnap = await getDoc(docRef);
+            console.log(Object.keys(docSnap.data()))
             setYellowList(Object.keys(docSnap.data()))
         };
 
@@ -146,7 +148,7 @@ export default function PlantTimeLine(){
                             />
                         </View>
                         <Image source={{uri: selectedImageUri}} style={styles.modalImage} />
-                        {selectedImageUri ? yellowList.includes(selectedImageUri.split("F")[1].split(".")[0]) ? 
+                        {selectedImageUri ? yellowList.includes(selectedImageUri.split("F")[1].split("?")[0]) ? 
                             <Text style={{marginTop: 7}}>    
                                 <Text style={{fontSize: 17, marginTop: 7}}>지난 주에 비해</Text> 
                                 <Text style={{fontSize: 19, marginTop: 7, color: "#BDDC1C", fontWeight: 'bold'}}> 노란 잎</Text>
